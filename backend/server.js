@@ -11,9 +11,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// 📌 라우트 추가
+// recommendation 라우트
 const recommendationRouter = require("./routes/recommendation");
 app.use("/recommendation", recommendationRouter);
+
+// feedback 라우트
+const feedbackRouter = require("./routes/feedback");
+app.use("/feedback", feedbackRouter);
 
 // 기본 라우트
 app.get("/", (req, res) => {
