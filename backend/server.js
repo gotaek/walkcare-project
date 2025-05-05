@@ -15,9 +15,9 @@ app.use(express.json());
 const recommendationRouter = require("./routes/recommendation");
 app.use("/recommendation", recommendationRouter);
 
-// feedback 라우트
-const feedbackRouter = require("./routes/feedback");
-app.use("/feedback", feedbackRouter);
+// review 라우트
+const reviewsRouter = require("./routes/reviews");
+app.use("/reviews", reviewsRouter);
 
 // history 라우트
 const historyRouter = require("./routes/history");

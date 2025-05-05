@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
+import axios from "axios";
 
 export default function ReviewWrite() {
   const { courseName, endedAt } = useLocalSearchParams();
@@ -14,9 +15,26 @@ export default function ReviewWrite() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  const handleSubmit = () => {
-    console.log("저장할 리뷰", { courseName, endedAt, rating, comment });
-    router.back(); // 또는 router.replace("/home") 등
+  const handleSubmit = async () => {
+    if (!courseName || !endedAt || !rating) {
+      alert("모든 항목을 입력해 주세요.");
+      return;
+    }
+
+    try {
+      await axios.post("http://192.168.0.4:3000/reviews", {
+        course_name: courseName,
+        ended_at: endedAt,
+        rating,
+        comment,
+      });
+
+      alert("리뷰가 저장되었습니다.");
+      router.replace("/"); // 홈으로 돌아가기
+    } catch (error) {
+      console.error("리뷰 저장 실패:", error);
+      alert("리뷰 저장 중 오류가 발생했습니다.");
+    }
   };
 
   return (
