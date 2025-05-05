@@ -19,6 +19,10 @@ app.use("/recommendation", recommendationRouter);
 const feedbackRouter = require("./routes/feedback");
 app.use("/feedback", feedbackRouter);
 
+// history 라우트
+const historyRouter = require("./routes/history");
+app.use("/history", historyRouter);
+
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("🚀 WalkCare 백엔드 서버가 실행 중입니다!");

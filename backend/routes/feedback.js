@@ -1,8 +1,14 @@
+// 📁 backend/routes/feedback.js
+// 사용자의 산책 피드백(별점, 한줄평)을 저장하는 API
+// 추천 기록이 존재해야 저장됨
+
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/connection");
 
 // POST /feedback
+// 🔹 입력: user_id, recommendation_id, rating, comment
+// 🔹 출력: 성공 메시지 or 에러
 router.post("/", async (req, res) => {
   const { user_id, recommendation_id, rating, comment } = req.body;
 
