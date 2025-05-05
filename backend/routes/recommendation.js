@@ -1,31 +1,65 @@
-// 📁 backend/routes/recommendation.js
-// 사용자 위치(lat, lon)와 산책 시간(time)을 받아
-// 산책이 적절한지 판단하고 추천 결과를 반환하는 API
+require("dotenv").config(); // 환경변수 사용 (서버 또는 상위 파일에서 한번만 실행)
 
 const express = require("express");
+const axios = require("axios");
 const router = express.Router();
 
-// GET /recommendation?lat=37.55&lon=127.01&time=30
-// 🔹 입력: lat, lon, time (쿼리스트링)
-// 🔹 출력: { recommendation: '산책 권장', course: '뚝섬공원', estimated_time: '30분' }
-router.get("/", (req, res) => {
-  const { lat, lon, time } = req.query;
+const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY; // 🔐 .env에서 불러오기
 
+// 최대 반경 3km (50m/min * 60min = 3000m)
+
+// GET /recommendation?lat=37.55&lon=127.01&time=30
+router.get("/", async (req, res) => {
+  const { lat, lon, time } = req.query;
+  const radius = Math.min(Math.floor(time * 50), 3000);
   if (!lat || !lon || !time) {
-    return res
-      .status(400)
-      .json({ error: "위치(lat, lon)와 시간(time)은 필수입니다." });
+    return res.status(400).json({ error: "lat, lon, time은 필수입니다." });
   }
 
-  // TODO: 머신러닝 기반 예측으로 대체 예정
-  // 임시 더미 로직
-  const recommendation = Math.random() > 0.5 ? "산책 권장" : "실내 운동 권장";
+  try {
+    // 📡 Kakao API 요청: 산책로 or 공원 검색
+    const kakaoRes = await axios.get(
+      "https://dapi.kakao.com/v2/local/search/keyword.json",
+      {
+        headers: { Authorization: KAKAO_REST_API_KEY },
+        params: {
+          query: "공원", // 또는 '공원'
+          x: lon,
+          y: lat,
+          radius: radius, // 10km 반경
+          sort: "accuracy", // 거리순 정렬
+        },
+      }
+    );
 
-  return res.json({
-    recommendation,
-    course: recommendation === "산책 권장" ? "뚝섬한강공원" : null,
-    estimated_time: `${time}분`,
-  });
+    const places = kakaoRes.data.documents;
+
+    if (places.length === 0) {
+      return res.json({
+        recommendation: "실내 운동 권장",
+        estimated_time: `${time}분`,
+        courses: [],
+      });
+    }
+
+    const courseList = places.slice(0, 5).map((p) => ({
+      name: p.place_name,
+      distance: Number(p.distance), // 단위: m
+      address: p.road_address_name || p.address_name,
+      url: p.place_url,
+      x: Number(p.x), // 경도
+      y: Number(p.y), // 위도
+    }));
+
+    return res.json({
+      recommendation: "산책 권장",
+      estimated_time: `${time}분`,
+      courses: courseList, // 위에서 가공한 배열
+    });
+  } catch (error) {
+    console.error("Kakao API 오류:", error.message);
+    return res.status(500).json({ error: "Kakao API 호출 실패" });
+  }
 });
 
 module.exports = router;
