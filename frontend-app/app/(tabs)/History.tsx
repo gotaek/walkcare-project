@@ -1,77 +1,91 @@
-import { View, Text, StyleSheet, FlatList } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import axios from "axios";
 
-const dummyData = [
-  {
-    id: "1",
-    date: "2025-05-06",
-    time_slot: "오후 6시",
-    course_name: "뚝섬한강공원",
-    recommended: true,
-    feedback_rating: 4,
-    feedback_comment: "선선해서 걷기 딱 좋았어요!",
-  },
-  {
-    id: "2",
-    date: "2025-05-05",
-    time_slot: "오전 9시",
-    course_name: "서울숲",
-    recommended: true,
-    feedback_rating: 5,
-    feedback_comment: "아침 햇살이 좋아서 상쾌했어요.",
-  },
-  {
-    id: "3",
-    date: "2025-05-04",
-    time_slot: "오후 2시",
-    course_name: "양재천",
-    recommended: false,
-    feedback_rating: null,
-    feedback_comment: null,
-  },
-];
-
-const renderStars = (count: number) => {
-  return (
-    <View style={{ flexDirection: "row" }}>
-      {[...Array(5)].map((_, i) => (
-        <Ionicons
-          key={i}
-          name={i < count ? "star" : "star-outline"}
-          size={18}
-          color="#f4c430"
-        />
-      ))}
-    </View>
-  );
-};
+interface HistoryItem {
+  id: number;
+  course_name: string;
+  date: string;
+  time_slot: string;
+  feedback_rating: number;
+  feedback_comment: string;
+  created_at: string;
+}
 
 export default function HistoryScreen() {
+  const [data, setData] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const userId = 1;
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get("http://192.168.0.4:3000/history", {
+          params: { user_id: userId },
+        });
+        if (Array.isArray(res.data.history)) {
+          setData(res.data.history);
+        } else {
+          console.error("예상치 못한 응답 형식:", res.data);
+        }
+      } catch (err) {
+        console.error("히스토리 불러오기 실패:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`http://192.168.0.4:3000/history/${id}`);
+      setData((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      Alert.alert("삭제 실패", "기록을 삭제할 수 없습니다.");
+      console.error("삭제 실패:", err);
+    }
+  };
+
+  if (loading) return <ActivityIndicator style={{ marginTop: 100 }} />;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📅 산책 기록</Text>
+      <Text style={styles.title}>📖 내 산책 기록</Text>
 
       <FlatList
-        data={dummyData}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        data={data}
+        keyExtractor={(item, index) => item.id?.toString() ?? index.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.cardDate}>
-              {item.date} • {item.time_slot}
+            <View style={styles.headerRow}>
+              <Text style={styles.name}>
+                📍 {item.course_name || "코스명 없음"}
+              </Text>
+              <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <Text style={styles.delete}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
+            <Text>
+              {item.date?.split("T")[0] || "날짜 없음"} /{" "}
+              {item.created_at?.split("T")[1]?.slice(0, 5)}
             </Text>
-            <Text style={styles.cardCourse}>{item.course_name}</Text>
-            <Text style={styles.cardRecommended}>
-              {item.recommended ? "✅ 산책 권장됨" : "🚫 권장되지 않음"}
-            </Text>
-
-            {item.recommended && item.feedback_rating != null && (
-              <View style={styles.starRow}>
-                {renderStars(item.feedback_rating)}
-              </View>
+            {item.feedback_rating > 0 && (
+              <Text style={styles.stars}>
+                {"★".repeat(item.feedback_rating)}
+                {"☆".repeat(5 - item.feedback_rating)}
+              </Text>
             )}
-            {item.recommended && item.feedback_comment && (
-              <Text style={styles.comment}>"{item.feedback_comment}"</Text>
+            {item.feedback_comment && (
+              <Text style={styles.comment}>💬 {item.feedback_comment}</Text>
             )}
           </View>
         )}
@@ -83,53 +97,24 @@ export default function HistoryScreen() {
 const PRIMARY = "#014f72";
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 20,
-    paddingTop: 80,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: PRIMARY,
-    marginBottom: 20,
-    textAlign: "center",
-  },
+  container: { flex: 1, backgroundColor: "#fff", padding: 24 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 16, color: PRIMARY },
   card: {
-    backgroundColor: "#f4f7fccd",
-    borderRadius: 12,
     padding: 16,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: "#f2f9fd",
+    marginBottom: 16,
   },
-  cardDate: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 4,
-  },
-  cardCourse: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: PRIMARY,
-  },
-  cardRecommended: {
-    marginTop: 4,
-    fontSize: 14,
-    color: "#444",
-  },
-  starRow: {
-    marginTop: 6,
+  name: { fontSize: 16, fontWeight: "bold", color: PRIMARY },
+  stars: { marginTop: 8, fontSize: 18, color: "#FFD700" },
+  comment: { marginTop: 8, fontStyle: "italic", color: "#333" },
+  headerRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  comment: {
-    marginTop: 6,
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#555",
+  delete: {
+    fontSize: 18,
+    color: "red",
   },
 });

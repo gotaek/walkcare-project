@@ -18,16 +18,46 @@ router.get("/", async (req, res) => {
 
   try {
     const sql = `
-      SELECT date, course_name AS course, time_slot AS time, feedback_rating AS feedback
+      SELECT id, date, course_name, time_slot AS time, feedback_rating, feedback_comment,created_at
       FROM recommendations
       WHERE user_id = ?
-      ORDER BY date DESC, time_slot
+      ORDER BY date DESC,
+      STR_TO_DATE(REPLACE(time_slot, '시', ''), '%p %l') ASC
     `;
     const [rows] = await pool.execute(sql, [user_id]);
 
-    res.json(rows);
+    res.json({ history: rows });
   } catch (err) {
     console.error("DB 오류:", err);
+    res.status(500).json({ error: "서버 오류" });
+  }
+});
+
+// DELETE /history/:id
+// 🔹 입력: id (URL 파라미터)
+// 🔹 출력: 삭제 성공 여부
+
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "id는 필수입니다." });
+  }
+
+  try {
+    const [result] = await pool.execute(
+      "DELETE FROM recommendations WHERE id = ?",
+      [id]
+    );
+
+    // 결과 확인: affectedRows가 0이면 삭제된 게 없음
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "삭제할 기록이 없습니다." });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("삭제 오류:", err);
     res.status(500).json({ error: "서버 오류" });
   }
 });

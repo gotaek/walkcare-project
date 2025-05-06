@@ -52,7 +52,7 @@ router.get("/", async (req, res) => {
     }));
 
     return res.json({
-      recommendation: "산책 권장",
+      recommendation: "산책 추천 장소",
       estimated_time: `${time}분`,
       courses: courseList, // 위에서 가공한 배열
     });
