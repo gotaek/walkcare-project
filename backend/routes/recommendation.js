@@ -6,8 +6,6 @@ const router = express.Router();
 
 const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY; // 🔐 .env에서 불러오기
 
-// 최대 반경 3km (50m/min * 60min = 3000m)
-
 // GET /recommendation?lat=37.55&lon=127.01&time=30
 router.get("/", async (req, res) => {
   const { lat, lon, time } = req.query;
@@ -26,7 +24,7 @@ router.get("/", async (req, res) => {
           query: "공원", // 또는 '공원'
           x: lon,
           y: lat,
-          radius: radius, // 10km 반경
+          radius: radius,
           sort: "accuracy", // 거리순 정렬
         },
       }

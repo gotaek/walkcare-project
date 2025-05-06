@@ -18,12 +18,18 @@ router.get("/", async (req, res) => {
 
   try {
     const sql = `
-      SELECT id, date, course_name, time_slot AS time, feedback_rating, feedback_comment,created_at
-      FROM recommendations
-      WHERE user_id = ?
-      ORDER BY date DESC,
-      STR_TO_DATE(REPLACE(time_slot, '시', ''), '%p %l') ASC
-    `;
+  SELECT 
+    id,
+    DATE_FORMAT(date, '%Y-%m-%d') AS date,
+    course_name,
+    time_slot AS time,
+    feedback_rating,
+    feedback_comment,
+    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+  FROM recommendations
+  WHERE user_id = ?
+  ORDER BY date DESC
+`;
     const [rows] = await pool.execute(sql, [user_id]);
 
     res.json({ history: rows });

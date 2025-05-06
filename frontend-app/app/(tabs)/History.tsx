@@ -74,10 +74,7 @@ export default function HistoryScreen() {
                 <Text style={styles.delete}>🗑️</Text>
               </TouchableOpacity>
             </View>
-            <Text>
-              {item.date?.split("T")[0] || "날짜 없음"} /{" "}
-              {item.created_at?.split("T")[1]?.slice(0, 5)}
-            </Text>
+            <Text>{item.created_at}</Text>
             {item.feedback_rating > 0 && (
               <Text style={styles.stars}>
                 {"★".repeat(item.feedback_rating)}
