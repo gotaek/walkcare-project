@@ -1,4 +1,4 @@
-// 📁 app/(tabs)/Recommendation.tsx
+// 파일: app/(tabs)/Recommendation.tsx
 // 사용자가 산책 시간을 선택하면 위치 기반으로 산책 코스를 추천해주고,
 // 산책 타이머까지 제공하는 주요 기능 화면입니다.
 
@@ -13,16 +13,15 @@ import {
   Modal,
 } from "react-native";
 import { useState, useEffect } from "react";
-import * as Location from "expo-location"; // 📡 위치 정보 사용을 위한 Expo API
-import dayjs from "dayjs"; // 날짜 포맷 라이브러리
+import * as Location from "expo-location";
+import dayjs from "dayjs";
 import axios from "axios";
-import { useRouter } from "expo-router"; // ✅ 화면 전환을 위한 훅
+import { useRouter } from "expo-router";
 import Constants from "expo-constants";
-import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors"; // 📌 색상 상수
+import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
 
-// ✅ 환경변수에서 API 주소를 불러옵니다 (.env → app.config.ts를 통해 주입됨)
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
-// 📌 추천받은 산책 코스 타입 정의
+
 interface Course {
   name: string;
   distance: number;
@@ -32,7 +31,6 @@ interface Course {
   y: number;
 }
 
-// 📡 추천 요청 처리
 export default function RecommendationScreen() {
   const [time, setTime] = useState<number | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -53,17 +51,15 @@ export default function RecommendationScreen() {
 
     try {
       setLoading(true);
-      // 1. 위치 권한 요청
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("권한 거부", "위치 접근 권한이 필요합니다.");
         return;
       }
-      // 2. 현재 위치 받아오기
+
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
 
-      // 3. 서버에 추천 요청
       const res = await axios.get(`${BASE_URL}/recommendation`, {
         params: { lat: latitude, lon: longitude, time },
       });
@@ -74,7 +70,7 @@ export default function RecommendationScreen() {
         setCourses([]);
         return;
       }
-      // 4. 추천 결과 처리
+
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
     } catch (err) {
@@ -85,7 +81,6 @@ export default function RecommendationScreen() {
     }
   };
 
-  // 🚶 산책 시작 버튼을 눌렀을 때
   const handleStartWalk = (course: Course) => {
     if (!time) return;
     setSelectedCourse(course);
@@ -93,7 +88,6 @@ export default function RecommendationScreen() {
     setIsWalking(true);
   };
 
-  // 🛑 산책 종료 시 리뷰 작성 화면으로 이동
   const handleStopWalk = () => {
     if (!selectedCourse) return;
     const endedAt = dayjs().format("YYYY-MM-DD HH:mm");
@@ -130,28 +124,42 @@ export default function RecommendationScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>⏱ 원하는 산책 시간을 선택하세요</Text>
+      <View style={styles.topSection}>
+        <Text style={styles.title}>⏱ 원하는 산책 시간을 선택하세요</Text>
 
-      <View style={styles.timeOptions}>
-        {[10, 20, 30, 40, 50, 60].map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[
-              styles.optionButton,
-              time === t && styles.optionButtonSelected,
-            ]}
-            onPress={() => setTime(t)}
-          >
-            <Text
-              style={time === t ? styles.optionTextSelected : styles.optionText}
+        <View style={styles.timeOptions}>
+          {[10, 20, 30, 40, 50, 60].map((t) => (
+            <TouchableOpacity
+              key={t}
+              style={[
+                styles.optionButton,
+                time === t && styles.optionButtonSelected,
+              ]}
+              onPress={() => setTime(t)}
             >
-              {t}분
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text
+                style={
+                  time === t ? styles.optionTextSelected : styles.optionText
+                }
+              >
+                {t}분
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      {result && <Text style={styles.resultText}>{result}</Text>}
+        <TouchableOpacity
+          style={styles.recommendButton}
+          onPress={handleRecommend}
+          disabled={loading}
+        >
+          <Text style={styles.recommendText}>
+            {loading ? "요청 중..." : "추천 받기"}
+          </Text>
+        </TouchableOpacity>
+
+        {result && <Text style={styles.resultText}>{result}</Text>}
+      </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
         {courses.map((c, idx) => (
@@ -174,16 +182,6 @@ export default function RecommendationScreen() {
           </View>
         ))}
       </ScrollView>
-
-      <TouchableOpacity
-        style={styles.recommendButton}
-        onPress={handleRecommend}
-        disabled={loading}
-      >
-        <Text style={styles.recommendText}>
-          {loading ? "요청 중..." : "추천 받기"}
-        </Text>
-      </TouchableOpacity>
 
       <Modal visible={isWalking} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -212,9 +210,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 24,
-    paddingTop: 80,
-    paddingBottom: 100,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  topSection: {
+    width: "100%",
     alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   title: {
     fontSize: 20,
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     fontSize: 16,
-    color: SECONDARY_COLOR,
+    color: "#f1f1f1",
     fontWeight: "bold",
   },
   resultText: {
@@ -257,12 +260,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "500",
   },
+  recommendButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 10,
+  },
+  recommendText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
   courseList: {
     paddingBottom: 200,
     width: "100%",
   },
   courseCard: {
-    backgroundColor: "#f4f9fc",
+    backgroundColor: SECONDARY_COLOR,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -285,8 +301,7 @@ const styles = StyleSheet.create({
   },
   courseLink: {
     fontSize: 14,
-    color: "#1e90ff",
-    textDecorationLine: "underline",
+    color: "#007AFF",
     marginBottom: 8,
   },
   walkButton: {
@@ -296,7 +311,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   walkButtonText: {
-    color: SECONDARY_COLOR,
+    color: "#ffffff",
     fontWeight: "bold",
   },
   timerText: {
@@ -306,21 +321,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  recommendButton: {
-    position: "absolute",
-    bottom: 40,
-    left: 24,
-    right: 24,
-    backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  recommendText: {
-    color: SECONDARY_COLOR,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: "#f1f1f1",
     padding: 28,
     borderRadius: 16,
     width: "80%",
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   stopButtonText: {
-    color: SECONDARY_COLOR,
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import Constants from "expo-constants"; // ✅ 환경변수 불러오기
-import { PRIMARY_COLOR } from "@/constants/Colors";
+import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
 import dayjs from "dayjs";
 
 // ✅ 환경변수에서 API 주소를 불러옵니다 (.env → app.config.ts를 통해 주입됨)
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#f2f9fd",
+    backgroundColor: SECONDARY_COLOR,
     marginBottom: 16,
   },
   name: { fontSize: 16, fontWeight: "bold", color: PRIMARY_COLOR },

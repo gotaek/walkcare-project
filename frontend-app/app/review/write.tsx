@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import Constants from "expo-constants";
-import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
+import { PRIMARY_COLOR } from "@/constants/Colors";
 // ✅ 환경변수에서 API 주소를 불러옵니다 (.env → app.config.ts를 통해 주입됨)
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
@@ -101,5 +101,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  buttonText: { color: SECONDARY_COLOR, fontWeight: "bold" },
+  buttonText: { color: "#ffffff", fontWeight: "bold" },
 });

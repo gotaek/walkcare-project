@@ -3,7 +3,7 @@
 
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { router } from "expo-router"; // ✅ 화면 이동을 위한 Expo Router 사용
-import { SECONDARY_COLOR } from "@/constants/Colors";
+import { PRIMARY_COLOR } from "@/constants/Colors";
 
 export default function HomeScreen() {
   return (
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   welcome: { fontSize: 20, marginTop: 40, marginBottom: 8, color: "#333" },
   title: { fontSize: 25, fontWeight: "bold", marginBottom: 20, color: "#222" },
   healthCard: {
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: "#ffffff",
     padding: 20,
     borderRadius: 16,
     shadowColor: "#000",
@@ -58,13 +58,13 @@ const styles = StyleSheet.create({
   healthText: { fontSize: 16, marginBottom: 4, color: "#555" },
 
   recommendButton: {
-    backgroundColor: "#014f72",
+    backgroundColor: PRIMARY_COLOR,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 16,
   },
-  buttonText: { color: SECONDARY_COLOR, fontSize: 18, fontWeight: "bold" },
+  buttonText: { color: "#ffffff", fontSize: 18, fontWeight: "bold" },
 
   historyButton: {
     paddingVertical: 14,
