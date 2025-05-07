@@ -1,20 +1,26 @@
+// 📁 app/(tabs)/_layout.tsx or TabsLayout.tsx
+// 하단 탭(Tab Navigator) 구성 및 각 탭 아이콘/텍스트 설정
+
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
+import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#014f72",
+        // 🔹 탭 색상 및 스타일 지정
+        tabBarActiveTintColor: PRIMARY_COLOR,
         tabBarInactiveTintColor: "gray",
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          backgroundColor: " #fff",
           height: 70,
           borderTopWidth: 1,
           borderTopColor: "#e0e0e0",
           paddingBottom: 10,
         },
+        // 🔹 탭 라벨 (한글 이름 커스텀)
         tabBarLabel: ({ focused, color }) => {
           let label = "";
           switch (route.name) {
@@ -41,6 +47,7 @@ export default function TabsLayout() {
             </Text>
           );
         },
+        // 🔹 탭 아이콘 (Ionicons 사용)
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any = "";
           switch (route.name) {
@@ -58,6 +65,7 @@ export default function TabsLayout() {
         },
       })}
     >
+      {/* 🔹 각 탭에 해당하는 스크린 연결 */}
       <Tabs.Screen name="index" options={{ headerShown: false }} />
       <Tabs.Screen name="Recommendation" options={{ headerShown: false }} />
       <Tabs.Screen name="History" options={{ headerShown: false }} />

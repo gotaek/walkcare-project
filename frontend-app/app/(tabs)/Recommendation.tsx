@@ -1,3 +1,7 @@
+// 📁 app/(tabs)/Recommendation.tsx
+// 사용자가 산책 시간을 선택하면 위치 기반으로 산책 코스를 추천해주고,
+// 산책 타이머까지 제공하는 주요 기능 화면입니다.
+
 import {
   View,
   Text,
@@ -9,10 +13,15 @@ import {
   Modal,
 } from "react-native";
 import { useState, useEffect } from "react";
-import * as Location from "expo-location";
+import * as Location from "expo-location"; // 📡 위치 정보 사용을 위한 Expo API
 import axios from "axios";
-import { useRouter } from "expo-router";
+import { useRouter } from "expo-router"; // ✅ 화면 전환을 위한 훅
+import Constants from "expo-constants";
+import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors"; // 📌 색상 상수
 
+// ✅ 환경변수에서 API 주소를 불러옵니다 (.env → app.config.ts를 통해 주입됨)
+const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
+// 📌 추천받은 산책 코스 타입 정의
 interface Course {
   name: string;
   distance: number;
@@ -22,8 +31,7 @@ interface Course {
   y: number;
 }
 
-const PRIMARY = "#014f72";
-
+// 📡 추천 요청 처리
 export default function RecommendationScreen() {
   const [time, setTime] = useState<number | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -44,16 +52,18 @@ export default function RecommendationScreen() {
 
     try {
       setLoading(true);
+      // 1. 위치 권한 요청
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("권한 거부", "위치 접근 권한이 필요합니다.");
         return;
       }
-
+      // 2. 현재 위치 받아오기
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
 
-      const res = await axios.get("http://192.168.0.4:3000/recommendation", {
+      // 3. 서버에 추천 요청
+      const res = await axios.get(`${BASE_URL}/recommendation`, {
         params: { lat: latitude, lon: longitude, time },
       });
 
@@ -63,7 +73,7 @@ export default function RecommendationScreen() {
         setCourses([]);
         return;
       }
-
+      // 4. 추천 결과 처리
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
     } catch (err) {
@@ -74,6 +84,7 @@ export default function RecommendationScreen() {
     }
   };
 
+  // 🚶 산책 시작 버튼을 눌렀을 때
   const handleStartWalk = (course: Course) => {
     if (!time) return;
     setSelectedCourse(course);
@@ -81,6 +92,7 @@ export default function RecommendationScreen() {
     setIsWalking(true);
   };
 
+  // 🛑 산책 종료 시 리뷰 작성 화면으로 이동
   const handleStopWalk = () => {
     if (!selectedCourse) return;
     const endedAt = new Date().toLocaleString();
@@ -197,7 +209,7 @@ export default function RecommendationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     paddingHorizontal: 24,
     paddingTop: 80,
     paddingBottom: 100,
@@ -206,7 +218,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: PRIMARY,
+    color: PRIMARY_COLOR,
     marginBottom: 24,
     textAlign: "center",
   },
@@ -226,7 +238,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   optionButtonSelected: {
-    backgroundColor: PRIMARY,
+    backgroundColor: PRIMARY_COLOR,
   },
   optionText: {
     fontSize: 16,
@@ -234,12 +246,12 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     fontSize: 16,
-    color: "#fff",
+    color: SECONDARY_COLOR,
     fontWeight: "bold",
   },
   resultText: {
     fontSize: 16,
-    color: PRIMARY,
+    color: PRIMARY_COLOR,
     marginVertical: 10,
     textAlign: "center",
     fontWeight: "500",
@@ -257,7 +269,7 @@ const styles = StyleSheet.create({
   courseName: {
     fontSize: 16,
     fontWeight: "600",
-    color: PRIMARY,
+    color: PRIMARY_COLOR,
     marginBottom: 4,
   },
   courseAddress: {
@@ -277,19 +289,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   walkButton: {
-    backgroundColor: PRIMARY,
+    backgroundColor: PRIMARY_COLOR,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   walkButtonText: {
-    color: "#fff",
+    color: SECONDARY_COLOR,
     fontWeight: "bold",
   },
   timerText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: PRIMARY,
+    color: PRIMARY_COLOR,
     marginTop: 20,
     marginBottom: 20,
   },
@@ -298,13 +310,13 @@ const styles = StyleSheet.create({
     bottom: 40,
     left: 24,
     right: 24,
-    backgroundColor: PRIMARY,
+    backgroundColor: PRIMARY_COLOR,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
   },
   recommendText: {
-    color: "#fff",
+    color: SECONDARY_COLOR,
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -315,7 +327,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: SECONDARY_COLOR,
     padding: 28,
     borderRadius: 16,
     width: "80%",
@@ -325,17 +337,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
-    color: PRIMARY,
+    color: PRIMARY_COLOR,
   },
   stopButton: {
-    backgroundColor: PRIMARY,
+    backgroundColor: PRIMARY_COLOR,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
     marginTop: 16,
   },
   stopButtonText: {
-    color: "#fff",
+    color: SECONDARY_COLOR,
     fontSize: 16,
     fontWeight: "bold",
   },
