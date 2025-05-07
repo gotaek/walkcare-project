@@ -38,7 +38,7 @@ export default function ReviewWrite() {
       });
 
       alert("리뷰가 저장되었습니다.");
-      router.replace("/"); // 홈으로 돌아가기
+      router.replace("/History"); // 히스토리 페이지로로 돌아가기
     } catch (error) {
       console.error("리뷰 저장 실패:", error);
       alert("리뷰 저장 중 오류가 발생했습니다.");
@@ -78,7 +78,7 @@ export default function ReviewWrite() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: SECONDARY_COLOR },
+  container: { flex: 1, padding: 24, backgroundColor: "#ffffff" },
   title: { fontSize: 24, fontWeight: "bold", color: PRIMARY_COLOR },
   label: { marginTop: 20, fontSize: 16 },
   stars: { flexDirection: "row", marginVertical: 10 },
@@ -86,7 +86,8 @@ const styles = StyleSheet.create({
   starSelected: { color: "#FFD700" },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#f1f1f1",
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
     padding: 12,
     minHeight: 100,

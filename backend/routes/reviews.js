@@ -17,18 +17,17 @@ router.post("/", async (req, res) => {
 
   try {
     // 랜덤 ID 생성 (주의: 충돌 가능성은 있음)
-    const id = Math.floor(100000 + Math.random() * 900000); // 6자리
+    const id = Math.floor(100000 + Math.random() * 900000); // 6자리 ID 생성
     const user_id = 1;
 
-    const rawDate = ended_at.split(" ")[0]; // '5/6/2025'
-    const [month, day, year] = rawDate.split("/");
-    const date = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // '2025-05-06'
+    // 🗓 ended_at: "2025-05-07 21:03"
+    const [date, time] = ended_at.split(" "); // ["2025-05-07", "21:03"]
 
-    const timeStr = ended_at.split(" ")[1]; // '오전 9:00' 등
-    const hour = parseInt(timeStr.split(":")[0], 10);
-    const ampm =
-      timeStr.includes("오후") || timeStr.includes("PM") ? "오후" : "오전";
-    const time_slot = `${ampm} ${hour}시`;
+    // ⏰ 오전/오후 구분
+    const hour = parseInt(time.split(":")[0], 10);
+    const ampm = hour >= 12 ? "오후" : "오전";
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+    const time_slot = `${ampm} ${hour12}시`;
 
     const recommended = 1;
     const created_at = new Date();

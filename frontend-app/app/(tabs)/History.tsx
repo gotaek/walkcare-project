@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import Constants from "expo-constants"; // ✅ 환경변수 불러오기
 import { PRIMARY_COLOR } from "@/constants/Colors";
+import dayjs from "dayjs";
 
 // ✅ 환경변수에서 API 주소를 불러옵니다 (.env → app.config.ts를 통해 주입됨)
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
@@ -84,7 +85,7 @@ export default function HistoryScreen() {
                 <Text style={styles.delete}>🗑️</Text>
               </TouchableOpacity>
             </View>
-            <Text>{item.created_at}</Text>
+            <Text>{dayjs(item.created_at).format("YYYY-MM-DD HH:mm")}</Text>
             {item.feedback_rating > 0 && (
               <Text style={styles.stars}>
                 {"★".repeat(item.feedback_rating)}

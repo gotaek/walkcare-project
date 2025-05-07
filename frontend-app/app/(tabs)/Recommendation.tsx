@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useState, useEffect } from "react";
 import * as Location from "expo-location"; // 📡 위치 정보 사용을 위한 Expo API
+import dayjs from "dayjs"; // 날짜 포맷 라이브러리
 import axios from "axios";
 import { useRouter } from "expo-router"; // ✅ 화면 전환을 위한 훅
 import Constants from "expo-constants";
@@ -95,7 +96,7 @@ export default function RecommendationScreen() {
   // 🛑 산책 종료 시 리뷰 작성 화면으로 이동
   const handleStopWalk = () => {
     if (!selectedCourse) return;
-    const endedAt = new Date().toLocaleString();
+    const endedAt = dayjs().format("YYYY-MM-DD HH:mm");
 
     router.push({
       pathname: "/review/write",
