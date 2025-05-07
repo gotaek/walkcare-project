@@ -1,7 +1,13 @@
+// 📁 backend/routes/riviews.js
+// 사용자의 산책 피드백(별점, 코멘트 등)을 저장하는 API
+
 const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
 
+// POST /reviews
+// 🔹 입력: course_name, ended_at, rating, comment (JSON Body)
+// 🔹 출력: 삽입 성공 여부 및 생성된 id
 router.post("/", async (req, res) => {
   const { course_name, ended_at, rating, comment } = req.body;
 
@@ -27,17 +33,6 @@ router.post("/", async (req, res) => {
     const recommended = 1;
     const created_at = new Date();
 
-    console.log(
-      id,
-      user_id,
-      course_name,
-      date,
-      time_slot,
-      recommended,
-      rating,
-      comment,
-      created_at
-    );
     await db.execute(
       `INSERT INTO recommendations 
       (id, user_id, course_name, date, time_slot, recommended, feedback_rating, feedback_comment, created_at)

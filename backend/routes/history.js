@@ -26,9 +26,9 @@ router.get("/", async (req, res) => {
     feedback_rating,
     feedback_comment,
     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
-  FROM recommendations
-  WHERE user_id = ?
-  ORDER BY date DESC
+    FROM recommendations
+    WHERE user_id = ?
+    ORDER BY date DESC
 `;
     const [rows] = await pool.execute(sql, [user_id]);
 
@@ -40,7 +40,7 @@ router.get("/", async (req, res) => {
 });
 
 // DELETE /history/:id
-// 🔹 입력: id (URL 파라미터)
+// 🔹 입력: id (URL 파라미터, 리뷰id)
 // 🔹 출력: 삭제 성공 여부
 
 router.delete("/:id", async (req, res) => {

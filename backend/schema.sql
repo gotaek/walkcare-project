@@ -1,4 +1,4 @@
--- WalkCare 프로젝트 DB 초기 설정 스크립트
+-- WalkCare 프로젝트 DB 초기 설정을 위한 스크립트 (자신의 mySql 로컬 환경에서 copy&paste 가능)
 
 CREATE DATABASE IF NOT EXISTS walkcare;
 USE walkcare;
@@ -22,7 +22,7 @@ CREATE TABLE health_data (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 산책 추천 기록 + 피드백
+-- 산책 추천 기록 + 리뷰
 CREATE TABLE recommendations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,

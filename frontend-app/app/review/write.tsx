@@ -43,7 +43,7 @@ export default function ReviewWrite() {
       <Text style={styles.label}>📍 {courseName}</Text>
       <Text style={styles.label}>⏱ {endedAt}</Text>
 
-      <Text style={styles.label}>⭐ 별점</Text>
+      <Text style={styles.label}>⭐ 만족도</Text>
       <View style={styles.stars}>
         {[1, 2, 3, 4, 5].map((n) => (
           <TouchableOpacity key={n} onPress={() => setRating(n)}>
