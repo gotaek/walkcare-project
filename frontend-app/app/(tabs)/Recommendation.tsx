@@ -11,6 +11,7 @@ import {
   ScrollView,
   Linking,
   Modal,
+  Image,
 } from "react-native";
 import { useState, useEffect } from "react";
 import * as Location from "expo-location";
@@ -40,6 +41,9 @@ export default function RecommendationScreen() {
   const [isWalking, setIsWalking] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  const [bestDay, setBestDay] = useState<string | null>(null);
+  const [todayWeather, setTodayWeather] = useState<any | null>(null);
 
   const router = useRouter();
 
@@ -73,6 +77,8 @@ export default function RecommendationScreen() {
 
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
+      setBestDay(data.best_day || null);
+      setTodayWeather(data.weather_today || null);
     } catch (err) {
       console.error("추천 요청 실패:", err);
       Alert.alert("오류", "서버와 통신 중 문제가 발생했습니다.");
@@ -159,6 +165,41 @@ export default function RecommendationScreen() {
         </TouchableOpacity>
 
         {result && <Text style={styles.resultText}>{result}</Text>}
+        {todayWeather && bestDay && (
+          <View style={{ alignItems: "center", marginTop: 10 }}>
+            {todayWeather.date !== bestDay ? (
+              <>
+                <Text style={styles.subText}>
+                  오늘은 실내에서 가볍게 움직여보는 건 어떨까요? 🧘
+                </Text>
+                <Text style={styles.subText}>
+                  📅 다음 산책 추천일은 {bestDay}입니다!
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.subText}>
+                ✅ 오늘은 산책하기 딱 좋은 날이에요! 밖에서 가볍게 걸어보세요 🌿
+              </Text>
+            )}
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <Text style={styles.subText}>오늘의 날씨:</Text>
+              <Image
+                source={{
+                  uri: `https://openweathermap.org/img/wn/${todayWeather.icon}@2x.png`,
+                }}
+                style={{ width: 40, height: 40, marginLeft: 8 }}
+              />
+              <Text style={styles.subText}>{todayWeather.main}</Text>
+            </View>
+          </View>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
@@ -259,6 +300,12 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     textAlign: "center",
     fontWeight: "500",
+  },
+  subText: {
+    fontSize: 14,
+    color: "#444",
+    marginTop: 4,
+    textAlign: "center",
   },
   recommendButton: {
     backgroundColor: PRIMARY_COLOR,
