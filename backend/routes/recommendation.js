@@ -1,12 +1,42 @@
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
+const { spawn } = require("child_process");
 const router = express.Router();
 
 const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
 const OPEN_WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY;
 
 const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 🔧 Python 예측 함수
+const getBestWalkDay = async (weeklyWeather) => {
+  return new Promise((resolve, reject) => {
+    const py = spawn("python", ["models/predict/predict_walk.py"]);
+    let result = "";
+
+    py.stdout.on("data", (data) => {
+      result += data.toString();
+    });
+
+    py.stderr.on("data", (err) => {
+      console.error("Python stderr:", err.toString());
+    });
+
+    py.on("close", () => {
+      try {
+        const parsed = JSON.parse(result);
+        resolve(parsed.best_day || null);
+      } catch (e) {
+        console.error("Python 예측 응답 파싱 실패:", e.message);
+        resolve(null);
+      }
+    });
+
+    py.stdin.write(JSON.stringify({ weekly_weather: weeklyWeather }));
+    py.stdin.end();
+  });
+};
 
 router.get("/", async (req, res) => {
   const { lat, lon, time } = req.query;
@@ -65,16 +95,18 @@ router.get("/", async (req, res) => {
         date: date.toISOString().split("T")[0],
         day: daysKor[date.getDay()],
         main: d.weather[0].main,
-        description: d.weather[0].description,
         icon: d.weather[0].icon,
         min_temp: d.temp.min,
         max_temp: d.temp.max,
         uvi: d.uvi,
-        pop: Math.round((d.pop || 0) * 100), // 0~1 → %
+        pop: Math.round((d.pop || 0) * 100),
       };
     });
 
     const todayWeather = weeklyWeather[0];
+
+    // 3. 머신러닝 예측 기반 best_day 도출
+    const bestDay = await getBestWalkDay(weeklyWeather);
 
     const responseData = {
       recommendation: places.length > 0 ? "산책 추천 장소" : "실내 운동 권장",
@@ -82,6 +114,7 @@ router.get("/", async (req, res) => {
       weather_today: todayWeather,
       weekly_weather: weeklyWeather,
       courses: courseList,
+      best_day: bestDay, // ✅ 추가됨
     };
 
     console.log(
