@@ -98,6 +98,13 @@ export default function HomeScreen() {
           🔥 칼로리 소모:{" "}
           {activity ? `${activity.caloriesOut} kcal` : "로딩 중..."}
         </Text>
+
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={fetchFitbitData}
+        >
+          <Text style={styles.refreshText}>건강 데이터 새로고침</Text>
+        </TouchableOpacity>
       </View>
 
       <View

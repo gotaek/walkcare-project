@@ -1,48 +1,44 @@
 -- WalkCare 프로젝트 DB 초기 설정을 위한 스크립트 (자신의 mySql 로컬 환경에서 copy&paste 가능)
-
 CREATE DATABASE IF NOT EXISTS walkcare;
 USE walkcare;
 
--- 사용자 정보
+-- 1. users 먼저 생성
 CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(50),
-  age INT,
+  user_id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(100),
   gender ENUM('male', 'female'),
+  age INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 건강 데이터 (Fitbit 수집용)
-CREATE TABLE health_data (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  timestamp DATETIME,
-  heart_rate INT,
-  steps INT,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- 산책 추천 기록 + 리뷰
-CREATE TABLE recommendations (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
+-- 2. walk_log (user_id → users.user_id 참조)
+CREATE TABLE walk_log (
+  walk_id CHAR(36) PRIMARY KEY,
+  user_id VARCHAR(50),
   course_name VARCHAR(100),
-  date DATE,
-  time_slot VARCHAR(20),
-  recommended BOOLEAN,
-  feedback_rating INT,
-  feedback_comment TEXT,
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  total_calories FLOAT,
+  comment TEXT,
+  rating INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- 환경 정보 (API 수집용)
-CREATE TABLE environment_data (
+-- 3. heart_rate_logs
+CREATE TABLE heart_rate_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  timestamp DATETIME,
-  location VARCHAR(100),
-  temperature FLOAT,
-  humidity FLOAT,
-  pm10 INT,
-  pm2_5 INT
+  walk_id CHAR(36),
+  time_stamp TIMESTAMP,
+  heart_rate INT,
+  FOREIGN KEY (walk_id) REFERENCES walk_log(walk_id)
+);
+
+-- 4. steps_logs
+CREATE TABLE steps_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  walk_id CHAR(36),
+  time_stamp TIMESTAMP,
+  steps INT,
+  FOREIGN KEY (walk_id) REFERENCES walk_log(walk_id)
 );
