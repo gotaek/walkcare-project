@@ -20,19 +20,19 @@ const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
 // 🔹 산책 기록 하나의 타입을 정의합니다 (타입스크립트용)
 interface HistoryItem {
-  id: number;
+  walk_id: string;
   course_name: string;
-  date: string;
-  time_slot: string;
-  feedback_rating: number;
-  feedback_comment: string;
+  start_time: string;
+  end_time: string;
+  rating: number;
+  comment: string;
   created_at: string;
 }
 
 export default function HistoryScreen() {
   const [data, setData] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const userId = 1; // const userId = 1; // TODO: 실제 사용자 ID로 변경 필요
+  const userId = "CLYLD9"; // const userId = 1; // TODO: 실제 사용자 ID로 변경 필요
 
   // ✅ 화면이 처음 렌더링될 때 실행: 서버에서 산책 기록을 가져옵니다
   useEffect(() => {
@@ -56,12 +56,13 @@ export default function HistoryScreen() {
   }, []);
 
   // ✅ 사용자가 휴지통 아이콘을 눌렀을 때 실행되는 삭제 함수
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (walk_id: string) => {
     try {
-      await axios.delete(`${BASE_URL}/history/${id}`);
-      setData((prev) => prev.filter((item) => item.id !== id));
+      await axios.delete(`${BASE_URL}/history/${walk_id}`);
+      setData((prev) => prev.filter((item) => item.walk_id !== walk_id));
     } catch (err) {
       Alert.alert("삭제 실패", "기록을 삭제할 수 없습니다.");
+      console.log(walk_id);
       console.error("삭제 실패:", err);
     }
   };
@@ -74,29 +75,39 @@ export default function HistoryScreen() {
 
       <FlatList
         data={data}
-        keyExtractor={(item, index) => item.id?.toString() ?? index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.headerRow}>
-              <Text style={styles.name}>
-                📍 {item.course_name || "코스명 없음"}
+        keyExtractor={(item) => item.walk_id}
+        renderItem={({ item }) => {
+          console.log("💬 렌더링 항목:", item);
+
+          return (
+            <View style={styles.card}>
+              <View style={styles.headerRow}>
+                <Text style={styles.name}>
+                  📍 {item.course_name || "코스명 없음"}
+                </Text>
+                <TouchableOpacity onPress={() => handleDelete(item.walk_id)}>
+                  <Text style={styles.delete}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text>
+                {dayjs(item.start_time).format("YYYY-MM-DD HH:mm")} ~{" "}
+                {dayjs(item.end_time).format("HH:mm")}
               </Text>
-              <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                <Text style={styles.delete}>🗑️</Text>
-              </TouchableOpacity>
+
+              {item.rating > 0 && (
+                <Text style={styles.stars}>
+                  {"★".repeat(item.rating)}
+                  {"☆".repeat(5 - item.rating)}
+                </Text>
+              )}
+
+              {item.comment && (
+                <Text style={styles.comment}>💬 {item.comment}</Text>
+              )}
             </View>
-            <Text>{dayjs(item.created_at).format("YYYY-MM-DD HH:mm")}</Text>
-            {item.feedback_rating > 0 && (
-              <Text style={styles.stars}>
-                {"★".repeat(item.feedback_rating)}
-                {"☆".repeat(5 - item.feedback_rating)}
-              </Text>
-            )}
-            {item.feedback_comment && (
-              <Text style={styles.comment}>💬 {item.feedback_comment}</Text>
-            )}
-          </View>
-        )}
+          );
+        }}
       />
     </View>
   );

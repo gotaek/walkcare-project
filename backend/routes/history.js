@@ -18,18 +18,18 @@ router.get("/", async (req, res) => {
 
   try {
     const sql = `
-  SELECT 
-    id,
-    DATE_FORMAT(date, '%Y-%m-%d') AS date,
-    course_name,
-    time_slot AS time,
-    feedback_rating,
-    feedback_comment,
-    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
-    FROM recommendations
-    WHERE user_id = ?
-    ORDER BY date DESC
-`;
+      SELECT 
+        walk_id ,
+        DATE_FORMAT(start_time, '%Y-%m-%d') AS date,
+        course_name,
+        DATE_FORMAT(start_time, '%p %l시') AS time,
+        rating,
+        comment,
+        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+      FROM walk_log
+      WHERE user_id = ?
+      ORDER BY start_time DESC
+    `;
     const [rows] = await pool.execute(sql, [user_id]);
 
     res.json({ history: rows });
@@ -43,23 +43,27 @@ router.get("/", async (req, res) => {
 // 🔹 입력: id (URL 파라미터, 리뷰id)
 // 🔹 출력: 삭제 성공 여부
 
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
+router.delete("/:walk_id", async (req, res) => {
+  const { walk_id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ error: "id는 필수입니다." });
+  if (!walk_id) {
+    return res.status(400).json({ error: "walk_id는 필수입니다." });
+  }
+
+  const [rows] = await pool.execute(
+    "SELECT * FROM walk_log WHERE walk_id = ?",
+    [walk_id]
+  );
+
+  if (rows.length === 0) {
+    return res.status(404).json({ error: "삭제할 기록이 존재하지 않습니다." });
   }
 
   try {
     const [result] = await pool.execute(
-      "DELETE FROM recommendations WHERE id = ?",
-      [id]
+      "DELETE FROM walk_log WHERE walk_id = ?",
+      [walk_id]
     );
-
-    // 결과 확인: affectedRows가 0이면 삭제된 게 없음
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "삭제할 기록이 없습니다." });
-    }
 
     res.json({ success: true });
   } catch (err) {
