@@ -4,3 +4,4 @@ node_modules/
 *.crt
 *.key
 __pycache__/
+/backend/tokens/fitbit_tokens.json

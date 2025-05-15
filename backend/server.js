@@ -4,26 +4,24 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const axios = require("axios");
+const qs = require("qs"); // 문자열 인코딩을 위한 모듈
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 미들웨어 설정
+// 🔄 로컬 파일 기반 토큰 저장 유틸 함수 import
+const { setToken, getToken } = require("./utils/tokenManager");
+
+// 📦 미들웨어 설정
 app.use(cors());
 app.use(express.json());
 
-// recommendation 라우트
-const recommendationRouter = require("./routes/recommendation");
-app.use("/recommendation", recommendationRouter);
+// 🧭 기타 라우트 등록
+app.use("/recommendation", require("./routes/recommendation"));
+app.use("/reviews", require("./routes/reviews"));
+app.use("/history", require("./routes/history"));
 
-// review 라우트
-const reviewsRouter = require("./routes/reviews");
-app.use("/reviews", reviewsRouter);
-
-// history 라우트
-const historyRouter = require("./routes/history");
-app.use("/history", historyRouter);
-
-//사용자가 로그인 버튼을 누르면 호출되는 라우트
+// 🔐 Fitbit 로그인 요청 → Fitbit OAuth 인증 페이지로 이동
 app.get("/auth/fitbit", (req, res) => {
   const params = new URLSearchParams({
     response_type: "code",
@@ -37,11 +35,10 @@ app.get("/auth/fitbit", (req, res) => {
   res.redirect(authUrl);
 });
 
-//Fitbit 로그인 & 동의 후 리디렉션되는 경로
-//여기서 access_token, refresh_token을 교환받음
+// 🔄 Fitbit OAuth Redirect → access_token 교환 후 로컬 JSON 저장
 app.get("/callback", async (req, res) => {
-  console.log("🔍 Received callback with query:", req.query);
   const code = req.query.code;
+
   const tokenUrl = "https://api.fitbit.com/oauth2/token";
   const authHeader = Buffer.from(
     `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`
@@ -63,20 +60,51 @@ app.get("/callback", async (req, res) => {
       }
     );
 
-    console.log("✅ Token Response:", response.data);
-    res.json(response.data);
+    const tokenData = response.data;
+
+    // ⏱ 토큰 만료 시점 계산
+    const now = Math.floor(Date.now() / 1000);
+    const expires_at = now + tokenData.expires_in;
+
+    // 💾 ✅ token 저장
+    setToken(tokenData.user_id, {
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token,
+      expires_at,
+    });
+
+    // 🧪 로그
+    console.log(`✅ 토큰 저장 완료: ${tokenData.user_id}`);
+
+    // 응답
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).send(
+      JSON.stringify({
+        message: "✅ Token saved to file",
+        user_id: tokenData.user_id,
+        access_token: tokenData.access_token?.slice(0, 10) + "...",
+        refresh_token: tokenData.refresh_token?.slice(0, 10) + "...",
+        expires_at,
+      })
+    );
   } catch (err) {
     console.error("❌ OAuth Error:", err.response?.data || err.message);
+
+    if (err.response) {
+      console.error("🔍 상태 코드:", err.response.status);
+      console.error("🔍 응답 바디:", err.response.data);
+    }
+
     res.status(500).send("OAuth Failed");
   }
 });
 
-// 기본 라우트
+// 🏠 기본 라우트
 app.get("/", (req, res) => {
   res.send("🚀 WalkCare 백엔드 서버가 실행 중입니다!");
 });
 
-// 서버 실행
+// ▶️ 서버 실행
 app.listen(PORT, () => {
   console.log(`✅ 서버가 http://localhost:${PORT} 에서 실행 중입니다`);
 });
