@@ -1,36 +1,50 @@
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
 import joblib
 import os
 
-# CSV 로드 (경로 주의)
-df = pd.read_csv("../weather_samples.csv")
+# ========================
+# 🔹 경로 설정
+# ========================
+DATA_PATH = "../weather_samples.csv"
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))            # models/train/
+ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))           # 프로젝트 루트
+MODEL_DIR = os.path.join(ROOT_DIR, "models")                       # models/
+MODEL_PATH = os.path.join(MODEL_DIR, "walk_forest_model.pkl")
 
-# 인코딩
-main_enc = LabelEncoder()
-desc_enc = LabelEncoder()
-df["main"] = main_enc.fit_transform(df["main"])
-df["result"] = df["result"].map({"yes": 1, "no": 0})
+# ✅ 저장 경로 확인
+os.makedirs(MODEL_DIR, exist_ok=True)
 
-# 학습
-X = df[["main", "min_temp", "max_temp", "uvi", "pop"]]
-y = df["result"]
-model = DecisionTreeClassifier(max_depth=4, random_state=42)
+# ========================
+# 📦 데이터 로딩
+# ========================
+df = pd.read_csv(DATA_PATH)
+
+# 유효성 체크
+required_columns = [
+    "temp", "humidity", "uvi", "pop", "hour", "dayofweek",
+    "main_Clear", "main_Clouds", "main_Rain", "main_Snow", "label"
+]
+missing = [col for col in required_columns if col not in df.columns]
+if missing:
+    raise ValueError(f"❌ 누락된 컬럼: {missing}")
+
+# ========================
+# 🔄 입력/타겟 분리
+# ========================
+X = df.drop(columns=["label"])
+y = df["label"]
+
+# ========================
+# 🎯 모델 학습
+# ========================
+model = RandomForestClassifier(n_estimators=100, max_depth=4, random_state=42)
 model.fit(X, y)
 
-# 저장 경로 생성
-os.makedirs("../models", exist_ok=True)
+# ========================
+# 💾 모델 저장
+# ========================
+os.makedirs(MODEL_DIR, exist_ok=True)
+joblib.dump(model, MODEL_PATH)
 
-# 모델과 인코더 저장
-joblib.dump(model, "../walk_decision_model.pkl")
-joblib.dump(main_enc, "../main_encoder.pkl")
-joblib.dump(desc_enc, "../desc_encoder.pkl")
-
-print("✅ 모델 및 인코더 저장 완료")
-accuracy = model.score(X, y)
-print(f"✅ 학습 정확도: {accuracy:.2f}")
-
-preds = model.predict(X)
-print("🔍 예측 결과 샘플:", preds[:10])
-print("🎯 정답(y):", y.values[:10])
+print("✅ Random Forest 모델 저장 완료:", MODEL_PATH)

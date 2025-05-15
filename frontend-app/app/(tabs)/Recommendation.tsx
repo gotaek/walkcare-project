@@ -42,7 +42,7 @@ export default function RecommendationScreen() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  const [bestDay, setBestDay] = useState<string | null>(null);
+  const [bestTimes, setBestTimes] = useState<any[]>([]);
   const [todayWeather, setTodayWeather] = useState<any | null>(null);
 
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function RecommendationScreen() {
 
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
-      setBestDay(data.best_day || null);
+      setBestTimes(data.best_times || []);
       setTodayWeather(data.weather_today || null);
     } catch (err) {
       console.error("추천 요청 실패:", err);
@@ -129,7 +129,10 @@ export default function RecommendationScreen() {
   }, [isWalking, timeLeft]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContainer}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.topSection}>
         <Text style={styles.title}>⏱ 원하는 산책 시간을 선택하세요</Text>
 
@@ -165,31 +168,58 @@ export default function RecommendationScreen() {
         </TouchableOpacity>
 
         {result && <Text style={styles.resultText}>{result}</Text>}
-        {todayWeather && bestDay && (
+        {todayWeather && (
           <View style={{ alignItems: "center", marginTop: 10 }}>
-            {todayWeather.date !== bestDay ? (
+            {bestTimes.length === 0 ? (
               <>
                 <Text style={styles.subText}>
-                  오늘은 실내에서 가볍게 움직여보는 건 어떨까요? 🧘
+                  오늘과 내일은 산책하기 좋은 시간이 없어요 😢
                 </Text>
                 <Text style={styles.subText}>
-                  📅 다음 산책 추천일은 {bestDay}입니다!
+                  실내에서 스트레칭이나 가벼운 활동을 추천드려요 🧘
                 </Text>
               </>
             ) : (
-              <Text style={styles.subText}>
-                ✅ 오늘은 산책하기 딱 좋은 날이에요! 밖에서 가볍게 걸어보세요 🌿
-              </Text>
+              <>
+                <Text style={styles.subText}>
+                  ✅ 산책하기 좋은 시간대를 추천드릴게요!
+                </Text>
+
+                {bestTimes.map((t, i) => (
+                  <View key={i} style={styles.walkTimeCard}>
+                    <View style={styles.walkTimeRow}>
+                      <Text style={styles.walkTimeLabel}>🕒 시간</Text>
+                      <Text style={styles.walkTimeValue}>{t.time}</Text>
+                    </View>
+                    <View style={styles.walkTimeRow}>
+                      <Text style={styles.walkTimeLabel}>🌡️ 온도</Text>
+                      <Text style={styles.walkTimeValue}>{t.temp}°C</Text>
+                    </View>
+                    <View style={styles.walkTimeRow}>
+                      <Text style={styles.walkTimeLabel}>☀️ 자외선</Text>
+                      <Text style={styles.walkTimeValue}>UVI {t.uvi}</Text>
+                    </View>
+                    <View style={styles.walkTimeRow}>
+                      <Text style={styles.walkTimeLabel}>☔ 강수확률</Text>
+                      <Text style={styles.walkTimeValue}>{t.pop}%</Text>
+                    </View>
+                    <View style={styles.walkTimeRow}>
+                      <Text style={styles.walkTimeLabel}>🌤️ 요약</Text>
+                      <Text style={styles.walkTimeValue}>{t.summary}</Text>
+                    </View>
+                  </View>
+                ))}
+              </>
             )}
 
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                marginTop: 8,
+                marginTop: 12,
               }}
             >
-              <Text style={styles.subText}>오늘의 날씨:</Text>
+              <Text style={styles.subText}>현재 날씨:</Text>
               <Image
                 source={{
                   uri: `https://openweathermap.org/img/wn/${todayWeather.icon}@2x.png`,
@@ -202,7 +232,7 @@ export default function RecommendationScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.courseList}>
+      <View style={styles.courseList}>
         {courses.map((c, idx) => (
           <View key={idx} style={styles.courseCard}>
             <Text style={styles.courseName}>📍 {c.name}</Text>
@@ -222,7 +252,7 @@ export default function RecommendationScreen() {
             </TouchableOpacity>
           </View>
         ))}
-      </ScrollView>
+      </View>
 
       <Modal visible={isWalking} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -242,23 +272,21 @@ export default function RecommendationScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
+  scrollContainer: {
     paddingHorizontal: 24,
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingTop: 20,
+    paddingBottom: 40,
+    backgroundColor: "#fff",
   },
   topSection: {
     width: "100%",
     alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 20,
@@ -294,19 +322,6 @@ const styles = StyleSheet.create({
     color: "#f1f1f1",
     fontWeight: "bold",
   },
-  resultText: {
-    fontSize: 16,
-    color: PRIMARY_COLOR,
-    marginVertical: 10,
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  subText: {
-    fontSize: 14,
-    color: "#444",
-    marginTop: 4,
-    textAlign: "center",
-  },
   recommendButton: {
     backgroundColor: PRIMARY_COLOR,
     paddingVertical: 16,
@@ -319,6 +334,49 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  resultText: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+    marginVertical: 10,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  subText: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#203A43",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  /** 🆕 산책 추천 카드 */
+  walkTimeCard: {
+    backgroundColor: "#fefefe",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 12,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  walkTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  walkTimeLabel: {
+    fontWeight: "900",
+    marginRight: 6,
+    color: PRIMARY_COLOR,
+  },
+  walkTimeValue: {
+    fontSize: 14,
+    color: "#444",
   },
   courseList: {
     paddingBottom: 200,

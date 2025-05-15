@@ -10,9 +10,9 @@ const OPEN_WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY;
 const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
 
 // 🔧 Python 예측 함수
-const getBestWalkDay = async (weeklyWeather) => {
+const getBestWalkTimes = async (hourlyWeather) => {
   return new Promise((resolve, reject) => {
-    const py = spawn("python", ["models/predict/predict_walk.py"]);
+    const py = spawn("python", ["models/predict/predict_walk_time.py"]);
     let result = "";
 
     py.stdout.on("data", (data) => {
@@ -26,14 +26,14 @@ const getBestWalkDay = async (weeklyWeather) => {
     py.on("close", () => {
       try {
         const parsed = JSON.parse(result);
-        resolve(parsed.best_day || null);
+        resolve(parsed.best_times || []);
       } catch (e) {
         console.error("Python 예측 응답 파싱 실패:", e.message);
-        resolve(null);
+        resolve([]);
       }
     });
 
-    py.stdin.write(JSON.stringify({ weekly_weather: weeklyWeather }));
+    py.stdin.write(JSON.stringify({ hourly_weather: hourlyWeather }));
     py.stdin.end();
   });
 };
@@ -72,14 +72,14 @@ router.get("/", async (req, res) => {
       y: Number(p.y),
     }));
 
-    // 2. 날씨 정보 호출 (7일 예보 포함)
+    // 2. 날씨 정보 호출 (48시간 예보 사용)
     const weatherRes = await axios.get(
       "https://api.openweathermap.org/data/3.0/onecall",
       {
         params: {
           lat,
           lon,
-          exclude: "minutely,hourly,alerts",
+          exclude: "minutely,daily,alerts",
           units: "metric",
           lang: "kr",
           appid: OPEN_WEATHER_API_KEY,
@@ -87,34 +87,37 @@ router.get("/", async (req, res) => {
       }
     );
 
-    const daily = weatherRes.data.daily || [];
+    const hourly = weatherRes.data.hourly || [];
 
-    const weeklyWeather = daily.slice(0, 7).map((d) => {
-      const date = new Date(d.dt * 1000);
-      return {
-        date: date.toISOString().split("T")[0],
-        day: daysKor[date.getDay()],
-        main: d.weather[0].main,
-        icon: d.weather[0].icon,
-        min_temp: d.temp.min,
-        max_temp: d.temp.max,
-        uvi: d.uvi,
-        pop: Math.round((d.pop || 0) * 100),
-      };
-    });
+    const hourlyWeather = hourly.slice(0, 48).map((h) => ({
+      dt: h.dt,
+      temp: h.temp,
+      humidity: h.humidity,
+      uvi: h.uvi ?? 0,
+      pop: h.pop ?? 0,
+      main: h.weather?.[0]?.main || "Clear",
+    }));
 
-    const todayWeather = weeklyWeather[0];
+    const now = new Date();
+    const today = {
+      date: now.toISOString().split("T")[0],
+      day: daysKor[now.getDay()],
+      temp: weatherRes.data.current.temp,
+      humidity: weatherRes.data.current.humidity,
+      uvi: weatherRes.data.current.uvi ?? 0,
+      main: weatherRes.data.current.weather?.[0]?.main || "Clear",
+      icon: weatherRes.data.current.weather?.[0]?.icon || "01d",
+    };
 
-    // 3. 머신러닝 예측 기반 best_day 도출
-    const bestDay = await getBestWalkDay(weeklyWeather);
+    // 3. 머신러닝 예측 기반 best_times 도출
+    const bestTimes = await getBestWalkTimes(hourlyWeather);
 
     const responseData = {
       recommendation: places.length > 0 ? "산책 추천 장소" : "실내 운동 권장",
       estimated_time: `${time}분`,
-      weather_today: todayWeather,
-      weekly_weather: weeklyWeather,
+      weather_today: today,
+      best_times: bestTimes, // ✅ 추천 시간대
       courses: courseList,
-      best_day: bestDay, // ✅ 추가됨
     };
 
     console.log(
