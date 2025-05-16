@@ -166,10 +166,12 @@ export default function HomeScreen() {
         ) : (
           <>
             <Text style={styles.pmText}>
-              미세먼지 농도: {pm10 !== null ? `${pm10} ㎍/㎥` : "데이터 없음"}
+              😷 미세먼지 농도:{" "}
+              {pm10 !== null ? `${pm10} ㎍/㎥` : "데이터 없음"}
             </Text>
             <Text style={styles.pmText}>
-              초미세먼지 농도: {pm25 !== null ? `${pm25} ㎍/㎥` : "데이터 없음"}
+              😶‍🌫️ 초미세먼지 농도:{" "}
+              {pm25 !== null ? `${pm25} ㎍/㎥` : "데이터 없음"}
             </Text>
           </>
         )}
@@ -177,13 +179,6 @@ export default function HomeScreen() {
           <Text style={styles.refreshText}>새로고침</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={styles.recommendButton}
-        onPress={() => router.push("/Recommendation")}
-      >
-        <Text style={styles.buttonText}>산책 추천 받기</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -223,18 +218,19 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
     marginBottom: 10,
     color: "#444",
   },
   healthText: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "500",
     marginBottom: 4,
-    color: "#555",
+    color: "#0077cc",
   },
   pmText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#0077cc",
   },
   refreshButton: {

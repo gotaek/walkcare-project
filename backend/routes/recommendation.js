@@ -47,6 +47,9 @@ router.get("/", async (req, res) => {
   }
 
   try {
+    const axiosInstance = axios.create({
+      timeout: 10000, // 10초 타임아웃
+    });
     // 1. Kakao 공원 검색
     const kakaoRes = await axios.get(
       "https://dapi.kakao.com/v2/local/search/keyword.json",
@@ -109,6 +112,7 @@ router.get("/", async (req, res) => {
       icon: weatherRes.data.current.weather?.[0]?.icon || "01d",
     };
 
+    console.log(hourlyWeather);
     // 3. 머신러닝 예측 기반 best_times 도출
     const bestTimes = await getBestWalkTimes(hourlyWeather);
 
@@ -127,6 +131,7 @@ router.get("/", async (req, res) => {
 
     return res.json(responseData);
   } catch (error) {
+    console.error("❌ API 오류:", error.message, error.config?.url);
     console.error("❌ API 오류:", error.message);
     return res.status(500).json({ error: "외부 API 호출 실패" });
   }

@@ -5,3 +5,5 @@ node_modules/
 *.key
 __pycache__/
 /backend/tokens/fitbit_tokens.json
+/backend/data/active_users.txt
+/backend/data/*.json

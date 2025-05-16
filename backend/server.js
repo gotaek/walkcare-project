@@ -84,18 +84,11 @@ app.get("/callback", (req, res) => {
   `);
 });
 
-// ✅ 로그인된 사용자 ID 반환
-app.get("/auth/active-user", (req, res) => {
-  // const userId = getActiveUser();
-  // if (!userId) return res.status(404).json({ error: "로그인된 사용자 없음" });
-  // res.json({ user_id: userId });
-  res.json({ user_id: "CLYLD9" });
-});
-
 // Fitbit API 라우트 등록
 app.use("/fitbit", require("./routes/fitbitApi"));
 
 app.use("/", require("./routes/exchange"));
+
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("🚀 WalkCare 백엔드 서버가 실행 중입니다!");

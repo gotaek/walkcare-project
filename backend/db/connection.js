@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  connectionLimit: 10,
 });
 
 // ✅ 다른 모듈에서 이 풀을 사용할 수 있도록 내보냄
