@@ -129,150 +129,152 @@ export default function RecommendationScreen() {
   }, [isWalking, timeLeft]);
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContainer}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.topSection}>
-        <Text style={styles.title}>⏱ 원하는 산책 시간을 선택하세요</Text>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.topSection}>
+          <Text style={styles.title}>⏱ 원하는 산책 시간을 선택하세요</Text>
 
-        <View style={styles.timeOptions}>
-          {[10, 20, 30, 40, 50, 60].map((t) => (
-            <TouchableOpacity
-              key={t}
-              style={[
-                styles.optionButton,
-                time === t && styles.optionButtonSelected,
-              ]}
-              onPress={() => setTime(t)}
-            >
-              <Text
-                style={
-                  time === t ? styles.optionTextSelected : styles.optionText
-                }
+          <View style={styles.timeOptions}>
+            {[10, 20, 30, 40, 50, 60].map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[
+                  styles.optionButton,
+                  time === t && styles.optionButtonSelected,
+                ]}
+                onPress={() => setTime(t)}
               >
-                {t}분
+                <Text
+                  style={
+                    time === t ? styles.optionTextSelected : styles.optionText
+                  }
+                >
+                  {t}분
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={styles.recommendButton}
+            onPress={handleRecommend}
+            disabled={loading}
+          >
+            <Text style={styles.recommendText}>
+              {loading ? "요청 중..." : "추천 받기"}
+            </Text>
+          </TouchableOpacity>
+
+          {result && <Text style={styles.resultText}>{result}</Text>}
+          {todayWeather && (
+            <View style={{ alignItems: "center", marginTop: 10 }}>
+              {bestTimes.length === 0 ? (
+                <>
+                  <Text style={styles.subText}>
+                    오늘과 내일은 산책하기 좋은 시간이 없어요 😢
+                  </Text>
+                  <Text style={styles.subText}>
+                    실내에서 스트레칭이나 가벼운 활동을 추천드려요 🧘
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.subText}>
+                    ✅ 산책하기 좋은 시간대를 추천드릴게요!
+                  </Text>
+
+                  {bestTimes.map((t, i) => (
+                    <View key={i} style={styles.walkTimeCard}>
+                      <View style={styles.walkTimeRow}>
+                        <Text style={styles.walkTimeLabel}>🕒 시간</Text>
+                        <Text style={styles.walkTimeValue}>{t.time}</Text>
+                      </View>
+                      <View style={styles.walkTimeRow}>
+                        <Text style={styles.walkTimeLabel}>🌡️ 온도</Text>
+                        <Text style={styles.walkTimeValue}>{t.temp}°C</Text>
+                      </View>
+                      <View style={styles.walkTimeRow}>
+                        <Text style={styles.walkTimeLabel}>☀️ 자외선</Text>
+                        <Text style={styles.walkTimeValue}>UVI {t.uvi}</Text>
+                      </View>
+                      <View style={styles.walkTimeRow}>
+                        <Text style={styles.walkTimeLabel}>☔ 강수확률</Text>
+                        <Text style={styles.walkTimeValue}>{t.pop}%</Text>
+                      </View>
+                      <View style={styles.walkTimeRow}>
+                        <Text style={styles.walkTimeLabel}>🌤️ 요약</Text>
+                        <Text style={styles.walkTimeValue}>{t.summary}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </>
+              )}
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 12,
+                }}
+              >
+                <Text style={styles.subText}>현재 날씨:</Text>
+                <Image
+                  source={{
+                    uri: `https://openweathermap.org/img/wn/${todayWeather.icon}@2x.png`,
+                  }}
+                  style={{ width: 40, height: 40, marginLeft: 8 }}
+                />
+                <Text style={styles.subText}>{todayWeather.main}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.courseList}>
+          {courses.map((c, idx) => (
+            <View key={idx} style={styles.courseCard}>
+              <Text style={styles.courseName}>📍 {c.name}</Text>
+              <Text style={styles.courseAddress}>{c.address}</Text>
+              <Text style={styles.courseDistance}>거리: {c.distance}m</Text>
+              <Text
+                style={styles.courseLink}
+                onPress={() => Linking.openURL(c.url)}
+              >
+                👉 장소 정보 보기
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.walkButton}
+                onPress={() => handleStartWalk(c)}
+              >
+                <Text style={styles.walkButtonText}>산책 시작</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
-        <TouchableOpacity
-          style={styles.recommendButton}
-          onPress={handleRecommend}
-          disabled={loading}
-        >
-          <Text style={styles.recommendText}>
-            {loading ? "요청 중..." : "추천 받기"}
-          </Text>
-        </TouchableOpacity>
-
-        {result && <Text style={styles.resultText}>{result}</Text>}
-        {todayWeather && (
-          <View style={{ alignItems: "center", marginTop: 10 }}>
-            {bestTimes.length === 0 ? (
-              <>
-                <Text style={styles.subText}>
-                  오늘과 내일은 산책하기 좋은 시간이 없어요 😢
-                </Text>
-                <Text style={styles.subText}>
-                  실내에서 스트레칭이나 가벼운 활동을 추천드려요 🧘
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.subText}>
-                  ✅ 산책하기 좋은 시간대를 추천드릴게요!
-                </Text>
-
-                {bestTimes.map((t, i) => (
-                  <View key={i} style={styles.walkTimeCard}>
-                    <View style={styles.walkTimeRow}>
-                      <Text style={styles.walkTimeLabel}>🕒 시간</Text>
-                      <Text style={styles.walkTimeValue}>{t.time}</Text>
-                    </View>
-                    <View style={styles.walkTimeRow}>
-                      <Text style={styles.walkTimeLabel}>🌡️ 온도</Text>
-                      <Text style={styles.walkTimeValue}>{t.temp}°C</Text>
-                    </View>
-                    <View style={styles.walkTimeRow}>
-                      <Text style={styles.walkTimeLabel}>☀️ 자외선</Text>
-                      <Text style={styles.walkTimeValue}>UVI {t.uvi}</Text>
-                    </View>
-                    <View style={styles.walkTimeRow}>
-                      <Text style={styles.walkTimeLabel}>☔ 강수확률</Text>
-                      <Text style={styles.walkTimeValue}>{t.pop}%</Text>
-                    </View>
-                    <View style={styles.walkTimeRow}>
-                      <Text style={styles.walkTimeLabel}>🌤️ 요약</Text>
-                      <Text style={styles.walkTimeValue}>{t.summary}</Text>
-                    </View>
-                  </View>
-                ))}
-              </>
-            )}
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 12,
-              }}
-            >
-              <Text style={styles.subText}>현재 날씨:</Text>
-              <Image
-                source={{
-                  uri: `https://openweathermap.org/img/wn/${todayWeather.icon}@2x.png`,
-                }}
-                style={{ width: 40, height: 40, marginLeft: 8 }}
-              />
-              <Text style={styles.subText}>{todayWeather.main}</Text>
+        <Modal visible={isWalking} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                🚶 산책 중: {selectedCourse?.name}
+              </Text>
+              <Text style={styles.timerText}>
+                남은 시간: {Math.floor(timeLeft / 60)}분 {timeLeft % 60}초
+              </Text>
+              <TouchableOpacity
+                style={styles.stopButton}
+                onPress={handleStopWalk}
+              >
+                <Text style={styles.stopButtonText}>산책 종료</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        )}
-      </View>
-
-      <View style={styles.courseList}>
-        {courses.map((c, idx) => (
-          <View key={idx} style={styles.courseCard}>
-            <Text style={styles.courseName}>📍 {c.name}</Text>
-            <Text style={styles.courseAddress}>{c.address}</Text>
-            <Text style={styles.courseDistance}>거리: {c.distance}m</Text>
-            <Text
-              style={styles.courseLink}
-              onPress={() => Linking.openURL(c.url)}
-            >
-              👉 장소 정보 보기
-            </Text>
-            <TouchableOpacity
-              style={styles.walkButton}
-              onPress={() => handleStartWalk(c)}
-            >
-              <Text style={styles.walkButtonText}>산책 시작</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
-
-      <Modal visible={isWalking} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              🚶 산책 중: {selectedCourse?.name}
-            </Text>
-            <Text style={styles.timerText}>
-              남은 시간: {Math.floor(timeLeft / 60)}분 {timeLeft % 60}초
-            </Text>
-            <TouchableOpacity
-              style={styles.stopButton}
-              onPress={handleStopWalk}
-            >
-              <Text style={styles.stopButtonText}>산책 종료</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </View>
   );
 }
 

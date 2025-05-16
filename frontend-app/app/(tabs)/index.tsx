@@ -9,6 +9,7 @@ import {
 import { router } from "expo-router";
 import { PRIMARY_COLOR } from "@/constants/Colors";
 import { setUserId, getUserId } from "@/utils/GlobalState";
+import { getAccessToken } from "@/utils/TokenStorage";
 
 export default function HomeScreen() {
   const [pm25, setPm25] = useState<number | null>(null);
@@ -21,6 +22,9 @@ export default function HomeScreen() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const isLoggedIn = accessToken !== null;
+
   const getPMCardBorderColor = (pm10: number | null) => {
     if (pm10 === null) return "#d0e7ff";
     if (pm10 <= 30) return "#5cb85c";
@@ -29,7 +33,6 @@ export default function HomeScreen() {
     return "#d9534f";
   };
 
-  const user_id = "CLYLD9";
   const fetchPM = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,17 +52,25 @@ export default function HomeScreen() {
   }, []);
 
   const fetchFitbitData = useCallback(async () => {
-    if (user_id !== "CLYLD9") return;
-
-    console.log("🧪 userId is CLYLD9 → API 호출 시도");
+    const token = await getAccessToken();
+    if (!token) {
+      console.warn("로그인되지 않음 - 토큰 없음");
+      return;
+    }
 
     try {
       const [profileRes, activityRes] = await Promise.all([
         fetch(
-          `https://8865-221-146-169-164.ngrok-free.app/fitbit/profile/${user_id}`
+          `https://https://33a2-221-146-169-164.ngrok-free.app/fitbit/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         ),
         fetch(
-          `https://8865-221-146-169-164.ngrok-free.app/fitbit/activity/${user_id}`
+          `https://https://33a2-221-146-169-164.ngrok-free.app/fitbit/activity`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         ),
       ]);
 
@@ -69,43 +80,61 @@ export default function HomeScreen() {
       setProfile(profileData);
       setActivity(activityData);
     } catch (error) {
-      console.error("❌ Fitbit 데이터 가져오기 실패:", error);
+      console.error("❌ Fitbit 데이터 요청 실패:", error);
     }
   }, []);
 
   useEffect(() => {
-    fetchPM();
-    // CLYLD9 하드코딩된 유저만 활동 정보 불러오기
-    if (user_id === "CLYLD9") {
-      fetchFitbitData();
-    }
-  }, [fetchPM, fetchFitbitData]);
+    const checkLogin = async () => {
+      const token = await getAccessToken();
+      setAccessToken(token);
+
+      fetchPM();
+      if (token) {
+        fetchFitbitData();
+      }
+    };
+
+    checkLogin();
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.welcome}>
-        안녕하세요, {profile ? `${profile.fullName}님 👋` : "👋"}
+        {isLoggedIn && profile
+          ? `안녕하세요, ${profile.fullName}님 👋`
+          : "안녕하세요 👋"}
       </Text>
-      <Text style={styles.title}>WalkCare에 오신 걸 환영합니다</Text>
 
-      <View style={styles.healthCard}>
-        <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
-        <Text style={styles.healthText}>
-          👟 걸음 수:{" "}
-          {activity ? `${activity.steps.toLocaleString()}보` : "로딩 중..."}
-        </Text>
-        <Text style={styles.healthText}>
-          🔥 칼로리 소모:{" "}
-          {activity ? `${activity.caloriesOut} kcal` : "로딩 중..."}
-        </Text>
+      {isLoggedIn ? (
+        <View style={styles.healthCard}>
+          <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
+          {activity ? (
+            <>
+              <Text style={styles.healthText}>
+                👟 걸음 수: {activity.steps.toLocaleString()}보
+              </Text>
+              <Text style={styles.healthText}>
+                🔥 칼로리 소모: {activity.caloriesOut} kcal
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.healthText}>데이터 로딩 중...</Text>
+          )}
 
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={fetchFitbitData}
-        >
-          <Text style={styles.refreshText}>건강 데이터 새로고침</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={fetchFitbitData}
+          >
+            <Text style={styles.refreshText}>건강 데이터 새로고침</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.healthCard}>
+          <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
+          <Text style={styles.healthText}>로그인이 필요합니다.</Text>
+        </View>
+      )}
 
       <View
         style={[
