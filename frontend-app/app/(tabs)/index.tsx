@@ -24,7 +24,7 @@ export default function HomeScreen() {
   const [loadingPM, setLoadingPM] = useState(true);
   const [checkingToken, setCheckingToken] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const { isLoggedIn } = useContext(AuthContext); // ✅ 여기에 선언
+  const { isLoggedIn } = useContext(AuthContext);
 
   const getPMCardBorderColor = (pm10: number | null) => {
     if (pm10 === null) return "#d0e7ff";
@@ -134,7 +134,7 @@ export default function HomeScreen() {
                 👟 걸음 수: {activity.steps.toLocaleString()}보
               </Text>
               <Text style={styles.healthText}>
-                🔥 칼로리 소모: {activity.caloriesOut} kcal
+                🔥 칼로리 소모량: {activity.caloriesOut} kcal
               </Text>
               <TouchableOpacity
                 style={styles.refreshButton}

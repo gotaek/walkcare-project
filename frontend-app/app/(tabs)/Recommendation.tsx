@@ -77,7 +77,7 @@ export default function RecommendationScreen() {
 
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
-      setBestTimes(data.best_times || []);
+      setBestTimes(data.best_times.reverse() || []);
       setTodayWeather(data.weather_today || null);
     } catch (err) {
       console.error("추천 요청 실패:", err);
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   optionButtonSelected: {
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: "#0077cc",
   },
   optionText: {
     fontSize: 16,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   recommendButton: {
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: "#0077cc",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   walkButton: {
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: "#0077cc",
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
