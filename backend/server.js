@@ -55,7 +55,7 @@ app.get("/auth/fitbit", (req, res) => {
   res.redirect(authUrl);
 });
 
-// ✅ 로그인 후 토큰 저장 + user_id 저장
+// ✅ Fitbit 인증 후 code를 받아 클라이언트 WebView에 전달
 app.get("/callback", (req, res) => {
   const code = req.query.code;
 

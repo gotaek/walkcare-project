@@ -30,7 +30,7 @@ export default function HomeScreen() {
     if (pm10 === null) return "#d0e7ff";
     if (pm10 <= 30) return "#5cb85c";
     if (pm10 <= 80) return "#f0ad4e";
-    if (pm10 <= 150) return "#f27c38";
+    if (pm10 <= 150) return "#f86712";
     return "#d9534f";
   };
 

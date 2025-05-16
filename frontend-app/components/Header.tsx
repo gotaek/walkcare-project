@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <Image
-        source={require("@/assets/images/walkcare-icon.png")}
+        source={require("@/assets/images/walkcare-logo.png")}
         style={styles.logo}
         resizeMode="contain"
       />

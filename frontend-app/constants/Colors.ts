@@ -5,7 +5,7 @@
 
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
-export const PRIMARY_COLOR = '#3A769E';
+export const PRIMARY_COLOR = '#2C6B9C';
 export const SECONDARY_COLOR = "#f2f9fd";
 
 
