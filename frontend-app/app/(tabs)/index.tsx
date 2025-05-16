@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { PRIMARY_COLOR } from "@/constants/Colors";
-import { setUserId, getUserId } from "@/utils/GlobalState";
 import { getAccessToken } from "@/utils/TokenStorage";
+import { AuthContext } from "@/context/AuthContext";
 
 export default function HomeScreen() {
   const [pm25, setPm25] = useState<number | null>(null);
@@ -20,10 +20,11 @@ export default function HomeScreen() {
     steps: number;
     caloriesOut: number;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
 
+  const [loadingPM, setLoadingPM] = useState(true);
+  const [checkingToken, setCheckingToken] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const isLoggedIn = accessToken !== null;
+  const { isLoggedIn } = useContext(AuthContext); // ✅ 여기에 선언
 
   const getPMCardBorderColor = (pm10: number | null) => {
     if (pm10 === null) return "#d0e7ff";
@@ -34,7 +35,7 @@ export default function HomeScreen() {
   };
 
   const fetchPM = useCallback(async () => {
-    setLoading(true);
+    setLoadingPM(true);
     try {
       const res = await fetch(
         "https://nm3aawl64m.execute-api.ap-northeast-2.amazonaws.com/default/getSensorData?sensor_id=mock-pm-sensor"
@@ -47,56 +48,73 @@ export default function HomeScreen() {
     } catch (error) {
       console.error("미세먼지 데이터 가져오기 실패:", error);
     } finally {
-      setLoading(false);
+      setLoadingPM(false);
     }
   }, []);
 
-  const fetchFitbitData = useCallback(async () => {
-    const token = await getAccessToken();
-    if (!token) {
-      console.warn("로그인되지 않음 - 토큰 없음");
-      return;
-    }
-
+  const fetchFitbitData = useCallback(async (token: string) => {
     try {
       const [profileRes, activityRes] = await Promise.all([
-        fetch(
-          `https://https://33a2-221-146-169-164.ngrok-free.app/fitbit/profile`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
-        fetch(
-          `https://https://33a2-221-146-169-164.ngrok-free.app/fitbit/activity`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
+        fetch(`https://33a2-221-146-169-164.ngrok-free.app/fitbit/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`https://33a2-221-146-169-164.ngrok-free.app/fitbit/activity`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
+      // ✅ 상태 코드 확인
+      if (!profileRes.ok) {
+        const errorText = await profileRes.text();
+        console.error("❌ 프로필 응답 실패:", profileRes.status, errorText);
+        return;
+      }
+
+      if (!activityRes.ok) {
+        const errorText = await activityRes.text();
+        console.error("❌ 활동 응답 실패:", activityRes.status, errorText);
+        return;
+      }
+
+      // ✅ 응답을 정상적으로 파싱
       const profileData = await profileRes.json();
       const activityData = await activityRes.json();
 
       setProfile(profileData);
       setActivity(activityData);
     } catch (error) {
-      console.error("❌ Fitbit 데이터 요청 실패:", error);
+      console.error("❌ Fitbit 데이터 요청 실패 (전체):", error);
     }
   }, []);
 
   useEffect(() => {
-    const checkLogin = async () => {
+    const init = async () => {
       const token = await getAccessToken();
       setAccessToken(token);
 
       fetchPM();
+
       if (token) {
-        fetchFitbitData();
+        await fetchFitbitData(token);
+      } else {
+        // 로그아웃 상태면 상태 초기화
+        setProfile(null);
+        setActivity(null);
       }
+
+      setCheckingToken(false);
     };
 
-    checkLogin();
-  }, []);
+    init();
+  }, [isLoggedIn]); // ✅ 로그인 상태가 바뀌면 자동 실행
+
+  if (checkingToken) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -105,11 +123,12 @@ export default function HomeScreen() {
           ? `안녕하세요, ${profile.fullName}님 👋`
           : "안녕하세요 👋"}
       </Text>
+      <Text style={styles.title}>WalkCare에 오신 걸 환영합니다</Text>
 
-      {isLoggedIn ? (
-        <View style={styles.healthCard}>
-          <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
-          {activity ? (
+      <View style={styles.healthCard}>
+        <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
+        {isLoggedIn ? (
+          activity ? (
             <>
               <Text style={styles.healthText}>
                 👟 걸음 수: {activity.steps.toLocaleString()}보
@@ -117,24 +136,20 @@ export default function HomeScreen() {
               <Text style={styles.healthText}>
                 🔥 칼로리 소모: {activity.caloriesOut} kcal
               </Text>
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={() => fetchFitbitData(accessToken!)}
+              >
+                <Text style={styles.refreshText}>건강 데이터 새로고침</Text>
+              </TouchableOpacity>
             </>
           ) : (
-            <Text style={styles.healthText}>데이터 로딩 중...</Text>
-          )}
-
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={fetchFitbitData}
-          >
-            <Text style={styles.refreshText}>건강 데이터 새로고침</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.healthCard}>
-          <Text style={styles.cardTitle}>오늘의 건강 요약</Text>
+            <Text style={styles.healthText}>건강 데이터 로딩 중...</Text>
+          )
+        ) : (
           <Text style={styles.healthText}>로그인이 필요합니다.</Text>
-        </View>
-      )}
+        )}
+      </View>
 
       <View
         style={[
@@ -146,7 +161,7 @@ export default function HomeScreen() {
         ]}
       >
         <Text style={styles.cardTitle}>오늘의 미세먼지</Text>
-        {loading ? (
+        {loadingPM ? (
           <ActivityIndicator size="small" color="#888" />
         ) : (
           <>
@@ -191,7 +206,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#222",
   },
-
   healthCard: {
     backgroundColor: "#ffffff",
     padding: 20,
@@ -206,8 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f8ff",
     padding: 20,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#d0e7ff",
     marginBottom: 30,
   },
   cardTitle: {
@@ -225,7 +237,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#0077cc",
   },
-
   refreshButton: {
     backgroundColor: "#0077cc",
     paddingVertical: 10,
@@ -239,7 +250,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-
   recommendButton: {
     backgroundColor: PRIMARY_COLOR,
     paddingVertical: 16,
@@ -251,5 +261,10 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

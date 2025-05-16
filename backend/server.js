@@ -7,9 +7,8 @@ const axios = require("axios");
 const qs = require("qs");
 const fs = require("fs");
 const path = require("path");
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // 🔄 로컬 토큰 유틸
 const { setToken, getToken } = require("./utils/tokenManager");
@@ -57,66 +56,32 @@ app.get("/auth/fitbit", (req, res) => {
 });
 
 // ✅ 로그인 후 토큰 저장 + user_id 저장
-app.get("/callback", async (req, res) => {
+app.get("/callback", (req, res) => {
   const code = req.query.code;
 
-  const tokenUrl = "https://api.fitbit.com/oauth2/token";
-  const authHeader = Buffer.from(
-    `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`
-  ).toString("base64");
+  console.log(`📥 Fitbit OAuth callback code: ${code}`);
 
-  try {
-    const response = await axios.post(
-      tokenUrl,
-      qs.stringify({
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: process.env.FITBIT_REDIRECT_URI,
-      }),
-      {
-        headers: {
-          Authorization: `Basic ${authHeader}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
-
-    const tokenData = response.data;
-    const now = Math.floor(Date.now() / 1000);
-    const expires_at = now + tokenData.expires_in;
-
-    // 💾 토큰 저장
-    setToken(tokenData.user_id, {
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      expires_at,
-    });
-
-    // 💾 현재 로그인된 user_id 저장
-    saveActiveUser(tokenData.user_id);
-
-    console.log(`✅ 토큰 및 user_id 저장 완료: ${tokenData.user_id}`);
-
-    res.setHeader("Content-Type", "application/json");
-    res.status(200).send(
-      JSON.stringify({
-        message: "✅ Token saved to file",
-        user_id: tokenData.user_id,
-        access_token: tokenData.access_token?.slice(0, 10) + "...",
-        refresh_token: tokenData.refresh_token?.slice(0, 10) + "...",
-        expires_at,
-      })
-    );
-  } catch (err) {
-    console.error("❌ OAuth Error:", err.response?.data || err.message);
-
-    if (err.response) {
-      console.error("🔍 상태 코드:", err.response.status);
-      console.error("🔍 응답 바디:", err.response.data);
-    }
-
-    res.status(500).send("OAuth Failed");
-  }
+  // ✅ WebView에게 code 전달하는 HTML
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>WalkCare 로그인 완료</title>
+        <style>
+          body { font-family: sans-serif; text-align: center; padding: 2rem; }
+        </style>
+      </head>
+      <body>
+        <h2>WalkCare 로그인 중...</h2>
+        <p>잠시만 기다려 주세요</p>
+        <script>
+          // ✅ React Native WebView에 code 전송
+          window.ReactNativeWebView?.postMessage("${code}");
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 // ✅ 로그인된 사용자 ID 반환
@@ -130,6 +95,7 @@ app.get("/auth/active-user", (req, res) => {
 // Fitbit API 라우트 등록
 app.use("/fitbit", require("./routes/fitbitApi"));
 
+app.use("/", require("./routes/exchange"));
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("🚀 WalkCare 백엔드 서버가 실행 중입니다!");

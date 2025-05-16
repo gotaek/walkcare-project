@@ -1,20 +1,22 @@
 // 📁 components/Header.tsx
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Linking,
-} from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "expo-router";
 import { PRIMARY_COLOR } from "@/constants/Colors";
-
-const FITBIT_AUTH_URL =
-  "https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23QB55&redirect_uri=https://8865-221-146-169-164.ngrok-free.app%2Fcallback&scope=activity+heartrate+sleep+profile";
+import { useContext } from "react";
+import { AuthContext } from "@/context/AuthContext";
+import { removeAccessToken } from "@/utils/TokenStorage";
 
 export default function Header() {
+  const navigation = useNavigation();
+  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
+  console.log("isLoggedIn", isLoggedIn);
   const handleLogin = () => {
-    Linking.openURL(FITBIT_AUTH_URL);
+    navigation.navigate("FitbitAuth");
+  };
+
+  const handleLogout = async () => {
+    await removeAccessToken();
+    setIsLoggedIn(false);
   };
 
   return (
@@ -26,8 +28,13 @@ export default function Header() {
       />
       <Text style={styles.title}>WalkCare</Text>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginText}>로그인</Text>
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={isLoggedIn ? handleLogout : handleLogin}
+      >
+        <Text style={styles.loginText}>
+          {isLoggedIn ? "로그아웃" : "로그인"}
+        </Text>
       </TouchableOpacity>
     </View>
   );

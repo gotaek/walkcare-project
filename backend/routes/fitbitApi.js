@@ -1,14 +1,26 @@
-// backend/routes/fitbitApi.js
 const express = require("express");
 const axios = require("axios");
 const { refreshAccessToken } = require("../oauth/refreshToken");
+const { getUserIdByToken } = require("../utils/tokenManager");
 
 const router = express.Router();
 
 // 👤 사용자 프로필 조회
-router.get("/profile/:userId", async (req, res) => {
+router.get("/profile", async (req, res) => {
   try {
-    const access_token = await refreshAccessToken(req.params.userId);
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization 헤더 누락" });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const userId = getUserIdByToken(token);
+
+    if (!userId) {
+      return res.status(404).json({ error: "❌ No token data found for user" });
+    }
+
+    const access_token = await refreshAccessToken(userId);
 
     const response = await axios.get(
       "https://api.fitbit.com/1/user/-/profile.json",
@@ -27,9 +39,21 @@ router.get("/profile/:userId", async (req, res) => {
 });
 
 // 👣 오늘 걸음 수 + 칼로리 소모량
-router.get("/activity/:userId", async (req, res) => {
+router.get("/activity", async (req, res) => {
   try {
-    const access_token = await refreshAccessToken(req.params.userId);
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization 헤더 누락" });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const userId = getUserIdByToken(token);
+
+    if (!userId) {
+      return res.status(404).json({ error: "❌ No token data found for user" });
+    }
+
+    const access_token = await refreshAccessToken(userId);
     const today = new Date().toISOString().slice(0, 10);
 
     const response = await axios.get(
