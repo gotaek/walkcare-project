@@ -1,6 +1,5 @@
 const axios = require("axios");
 const qs = require("qs");
-const { saveFitbitToken } = require("../dynamo/fitbitToken");
 
 exports.handler = async (event) => {
   const code = event.queryStringParameters?.code;
@@ -28,9 +27,6 @@ exports.handler = async (event) => {
     );
 
     const { access_token, refresh_token, user_id, expires_in } = res.data;
-
-    // ✅ 토큰 저장
-    await saveFitbitToken({ user_id, access_token, refresh_token, expires_in });
 
     return {
       statusCode: 200,

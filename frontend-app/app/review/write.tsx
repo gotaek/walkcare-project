@@ -17,9 +17,6 @@ import Constants from "expo-constants";
 import { PRIMARY_COLOR } from "@/constants/Colors";
 import { getAccessToken } from "@/utils/TokenStorage";
 
-// ✅ 환경변수에서 API base URL 주입 (.env → app.config.ts에서 주입됨)
-const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
-
 export default function ReviewWrite() {
   const { courseName, endedAt } = useLocalSearchParams(); // URL 쿼리 파라미터 추출
   const router = useRouter(); // 페이지 이동 처리
@@ -43,9 +40,12 @@ export default function ReviewWrite() {
           return;
         }
 
-        const res = await axios.get(`${BASE_URL}/fitbit/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `https://iec05jbxy3.execute-api.ap-northeast-2.amazonaws.com/fitbitSummary`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         setActivity({
           steps: res.data.steps,
@@ -75,8 +75,9 @@ export default function ReviewWrite() {
       }
 
       await axios.post(
-        `${BASE_URL}/reviews`,
+        `https://t6fqav840h.execute-api.ap-northeast-2.amazonaws.com/review`,
         {
+          user_id: "CLYLD9",
           course_name: courseName,
           ended_at: endedAt,
           rating,

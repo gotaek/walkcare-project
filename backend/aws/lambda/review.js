@@ -27,10 +27,10 @@ exports.handler = async (event) => {
     }
 
     const connection = await mysql.createConnection({
-      host: "walkcare-db.abcxyz.ap-northeast-2.rds.amazonaws.com",
-      user: "admin",
-      password: "deriko3255",
-      database: "walkcare",
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
     });
 
     const walk_id = uuidv4();
