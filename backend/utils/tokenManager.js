@@ -1,65 +1,78 @@
-const fs = require("fs");
-const path = require("path");
+const AWS = require("aws-sdk");
 
-const DATA_DIR = path.join(__dirname, "../data");
+// ✅ AWS 리전 설정 (서울 리전 기준)
+AWS.config.update({ region: "ap-northeast-2" });
 
-// ✅ 폴더 없으면 생성
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+const dynamo = new AWS.DynamoDB.DocumentClient();
+
+// 📌 Fitbit 토큰 저장
+async function saveFitbitToken({
+  user_id,
+  access_token,
+  refresh_token,
+  expires_in,
+}) {
+  const expires_at = Date.now() + expires_in * 1000;
+
+  const params = {
+    TableName: "FitbitTokens",
+    Item: {
+      user_id,
+      access_token,
+      refresh_token,
+      expires_at,
+      updated_at: Date.now(),
+    },
+  };
+
+  try {
+    await dynamo.put(params).promise();
+    console.log("✅ Fitbit token saved for user:", user_id);
+  } catch (err) {
+    console.error("❌ DynamoDB save error:", err);
+    throw err;
+  }
 }
 
-// 📌 토큰 저장
-const setToken = (userId, tokenData) => {
-  const filePath = path.join(DATA_DIR, `token_${userId}.json`);
-  fs.writeFileSync(filePath, JSON.stringify(tokenData, null, 2));
-};
+// 📌 Fitbit 토큰 조회
+async function getFitbitToken(user_id) {
+  const params = {
+    TableName: "FitbitTokens",
+    Key: { user_id },
+  };
 
-// 📌 토큰 불러오기
-const getToken = (userId) => {
-  const filePath = path.join(DATA_DIR, `token_${userId}.json`);
-  if (fs.existsSync(filePath)) {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  try {
+    const result = await dynamo.get(params).promise();
+    return result.Item || null;
+  } catch (err) {
+    console.error("❌ DynamoDB get error:", err);
+    throw err;
   }
-  return null;
-};
+}
 
-// 📌 현재 로그인된 사용자 저장
-const saveActiveUser = (userId) => {
-  const filePath = path.join(DATA_DIR, "active_user.txt");
-  fs.writeFileSync(filePath, userId);
-};
+// 📌 access_token으로 user_id 찾기 (선택 기능, 비용 발생 주의)
+async function getUserIdByAccessToken(access_token) {
+  const params = {
+    TableName: "FitbitTokens",
+    FilterExpression: "#access_token = :val",
+    ExpressionAttributeNames: { "#access_token": "access_token" },
+    ExpressionAttributeValues: { ":val": access_token },
+  };
 
-// 📌 현재 로그인된 사용자 불러오기
-const getActiveUser = () => {
-  const filePath = path.join(DATA_DIR, "active_user.txt");
-  if (fs.existsSync(filePath)) {
-    return fs.readFileSync(filePath, "utf-8");
-  }
-  return null;
-};
-
-// ✅ access_token 으로 userId 찾기
-const getUserIdByToken = (accessToken) => {
-  const files = fs.readdirSync(DATA_DIR);
-
-  for (const file of files) {
-    if (file.startsWith("token_") && file.endsWith(".json")) {
-      const filePath = path.join(DATA_DIR, file);
-      const tokenData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-
-      if (tokenData.access_token === accessToken) {
-        return file.replace("token_", "").replace(".json", "");
-      }
+  try {
+    const result = await dynamo.scan(params).promise();
+    if (result.Items && result.Items.length > 0) {
+      return result.Items[0].user_id;
     }
+    return null;
+  } catch (err) {
+    console.error("❌ DynamoDB scan error:", err);
+    throw err;
   }
-
-  return null;
-};
+}
 
 module.exports = {
-  setToken,
-  getToken,
-  saveActiveUser,
-  getActiveUser,
-  getUserIdByToken, // ✅ 새로 추가
+  saveFitbitToken,
+  getFitbitToken,
+  getUserIdByAccessToken,
 };

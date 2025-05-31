@@ -54,31 +54,47 @@ export default function HomeScreen() {
 
   const fetchFitbitData = useCallback(async (token: string) => {
     try {
+      console.log("🟢 fetchFitbitData 진입");
+      console.log("🔐 access_token:", token);
+
+      const profileUrl =
+        "https://ite64nurad.execute-api.ap-northeast-2.amazonaws.com/fitbitProfile";
+      const activityUrl =
+        "https://6st6a9j910.execute-api.ap-northeast-2.amazonaws.com/fitbitActivity";
+
+      console.log("📤 profile 요청:", profileUrl);
+      console.log("📤 activity 요청:", activityUrl);
+
       const [profileRes, activityRes] = await Promise.all([
-        fetch(`https://33a2-221-146-169-164.ngrok-free.app/fitbit/profile`, {
+        fetch(profileUrl, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`https://33a2-221-146-169-164.ngrok-free.app/fitbit/activity`, {
+        fetch(activityUrl, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
-      // ✅ 상태 코드 확인
       if (!profileRes.ok) {
         const errorText = await profileRes.text();
         console.error("❌ 프로필 응답 실패:", profileRes.status, errorText);
         return;
+      } else {
+        console.log("✅ 프로필 응답 성공:", profileRes.status);
       }
+
+      const profileData = await profileRes.json();
+      console.log("📥 프로필 데이터:", profileData);
 
       if (!activityRes.ok) {
         const errorText = await activityRes.text();
         console.error("❌ 활동 응답 실패:", activityRes.status, errorText);
         return;
+      } else {
+        console.log("✅ 활동 응답 성공:", activityRes.status);
       }
 
-      // ✅ 응답을 정상적으로 파싱
-      const profileData = await profileRes.json();
       const activityData = await activityRes.json();
+      console.log("📥 활동 데이터:", activityData);
 
       setProfile(profileData);
       setActivity(activityData);

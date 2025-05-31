@@ -7,9 +7,8 @@ import { AuthContext } from "@/context/AuthContext";
 import { useNavigation } from "expo-router";
 
 const CLIENT_ID = "23QB55";
-const REDIRECT_URI = "https://33a2-221-146-169-164.ngrok-free.app/callback";
-const FITBIT_AUTH_URL = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-  REDIRECT_URI
+const FITBIT_AUTH_URL = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23QB55&redirect_uri=${encodeURIComponent(
+  "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback"
 )}&scope=activity+heartrate+sleep+profile`;
 
 export default function FitbitAuth() {
@@ -23,7 +22,7 @@ export default function FitbitAuth() {
 
     try {
       const res = await fetch(
-        `https://33a2-221-146-169-164.ngrok-free.app/exchange?code=${code}`
+        `https://qlvpoaklfb.execute-api.ap-northeast-2.amazonaws.com/exchange?code=${code}`
       );
       const data = await res.json();
 

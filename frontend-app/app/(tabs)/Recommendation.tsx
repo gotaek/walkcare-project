@@ -18,10 +18,7 @@ import * as Location from "expo-location";
 import dayjs from "dayjs";
 import axios from "axios";
 import { useRouter } from "expo-router";
-import Constants from "expo-constants";
 import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
-
-const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
 interface Course {
   name: string;
@@ -64,9 +61,12 @@ export default function RecommendationScreen() {
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
 
-      const res = await axios.get(`${BASE_URL}/recommendation`, {
-        params: { lat: latitude, lon: longitude, time },
-      });
+      const res = await axios.get(
+        `https://swcm3kgqwa.execute-api.ap-northeast-2.amazonaws.com/recommendation`,
+        {
+          params: { lat: latitude, lon: longitude, time },
+        }
+      );
 
       const data = res.data;
       if (!data || !data.recommendation) {

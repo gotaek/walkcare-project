@@ -1,14 +1,10 @@
 const axios = require("axios");
 const qs = require("qs");
+const { saveFitbitToken } = require("../dynamo/fitbitToken");
 
 exports.handler = async (event) => {
   const code = event.queryStringParameters?.code;
-  const redirect_uri =
-    "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback";
-
-  if (!code) {
-    return { statusCode: 400, body: "Missing code" };
-  }
+  if (!code) return { statusCode: 400, body: "Missing code" };
 
   const authHeader = Buffer.from(
     `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`
@@ -20,7 +16,8 @@ exports.handler = async (event) => {
       qs.stringify({
         code,
         grant_type: "authorization_code",
-        redirect_uri,
+        redirect_uri:
+          "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback",
       }),
       {
         headers: {
@@ -30,18 +27,21 @@ exports.handler = async (event) => {
       }
     );
 
+    const { access_token, refresh_token, user_id, expires_in } = res.data;
+
+    // ✅ 토큰 저장
+    await saveFitbitToken({ user_id, access_token, refresh_token, expires_in });
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res.data),
+      body: JSON.stringify({ access_token, user_id }),
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: "OAuth exchange failed",
-        detail: err.message,
-      }),
-    };
+    console.error(
+      "❌ Token exchange error:",
+      err.response?.data || err.message
+    );
+    return { statusCode: 500, body: "OAuth Token Exchange Failed" };
   }
 };
