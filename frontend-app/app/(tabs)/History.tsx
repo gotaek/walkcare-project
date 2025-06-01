@@ -13,9 +13,18 @@ import axios from "axios";
 import Constants from "expo-constants";
 import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc"; // UTC 플러그인 임포트
+import timezone from "dayjs/plugin/timezone"; // Timezone 플러그인 임포트
 import { getAccessToken } from "@/utils/TokenStorage";
 import { AuthContext } from "@/context/AuthContext";
 import { LineChart } from "react-native-chart-kit";
+
+// dayjs 플러그인 활성화
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// 기본 타임존을 'Asia/Seoul'로 설정 (애플리케이션 전반에 영향을 줌)
+dayjs.tz.setDefault("Asia/Seoul");
 
 const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
@@ -49,9 +58,12 @@ export default function HistoryScreen() {
       }
 
       try {
-        const res = await axios.get(`${BASE_URL}/history`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `https://dc5yumgpl6.execute-api.ap-northeast-2.amazonaws.com/history`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         if (Array.isArray(res.data.history)) {
           setData(res.data.history);
@@ -67,8 +79,11 @@ export default function HistoryScreen() {
   }, [isLoggedIn]);
 
   const handleDelete = useCallback(async (walk_id: string) => {
+    console.log(walk_id);
     try {
-      await axios.delete(`${BASE_URL}/history/${walk_id}`);
+      await axios.delete(
+        `https://m106osgu62.execute-api.ap-northeast-2.amazonaws.com/dev/deleteHistory/${walk_id}`
+      );
       setData((prev) => prev.filter((item) => item.walk_id !== walk_id));
     } catch (err) {
       Alert.alert("삭제 실패", "기록을 삭제할 수 없습니다.");
@@ -96,7 +111,7 @@ export default function HistoryScreen() {
     const timeSlots: { [key: string]: number } = {};
     todayData.forEach((item) => {
       if (item.total_calories) {
-        const time = dayjs(item.end_time).format("HH:00");
+        const time = dayjs(item.end_time).tz().format("HH:00");
         timeSlots[time] = Math.max(timeSlots[time] || 0, item.total_calories);
       }
     });
@@ -177,9 +192,14 @@ export default function HistoryScreen() {
         </View>
 
         <Text style={styles.date}>
-          {dayjs(item.start_time).format("YYYY.MM.DD")}{" "}
+          {/* UTC 문자열을 dayjs.utc로 파싱 후 KST로 변환하여 포맷 */}
+          {dayjs
+            .utc(item.start_time)
+            .tz("Asia/Seoul")
+            .format("YYYY.MM.DD")}{" "}
           <Text style={styles.time}>
-            {dayjs(item.end_time).format("HH:mm")} 까지의 기록
+            {dayjs.utc(item.end_time).tz("Asia/Seoul").format("HH:mm")} 까지의
+            기록
           </Text>
         </Text>
 
