@@ -1,14 +1,13 @@
-import sys
+# predictWalkTime.py
+
 import json
 import joblib
 import pandas as pd
 from datetime import datetime
 import os
 
-# 🔹 현재 파일 위치 기준으로 프로젝트 루트 경로 계산
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))           # models/predict/
-ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))           # 프로젝트 루트
-MODEL_PATH = os.path.join(ROOT_DIR, "models", "walk_forest_model.pkl")
+# 🔹 현재 파일 위치 기준으로 모델 경로 설정
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "walk_forest_model.pkl")
 
 # 🔹 모델 불러오기
 model = joblib.load(MODEL_PATH)
@@ -46,31 +45,36 @@ def preprocess_hourly_data(hourly_data):
         })
     return pd.DataFrame(processed)
 
-# 🔹 표준 입력(JSON) 받기
-input_json = sys.stdin.read()
-input_data = json.loads(input_json)
-hourly_weather = input_data["hourly_weather"]
+# 🔹 Lambda 핸들러 함수
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event["body"])
+        hourly_weather = body.get("hourly_weather", [])
+        
+        df = preprocess_hourly_data(hourly_weather)
+        X = df.drop(columns=["dt"])
+        df["walkable"] = model.predict(X)
 
-# 🔹 전처리 → 예측 → 추천
-df = preprocess_hourly_data(hourly_weather)
-X = df.drop(columns=["dt"])
-df["walkable"] = model.predict(X)
+        candidates = df[df["walkable"] == 1]
+        candidates = candidates.sort_values(by=["pop", "uvi", "temp"]).head(3)
 
+        best_times = []
+        for _, row in candidates.iterrows():
+            summary = "맑음" if row["main_Clear"] else "흐림" if row["main_Clouds"] else "비/눈"
+            best_times.append({
+                "time": row["dt"],
+                "temp": round(row["temp"], 1),
+                "uvi": round(row["uvi"], 1),
+                "pop": round(row["pop"] * 100),
+                "summary": summary
+            })
 
-# 🔹 상위 3개 시간대 추천 (pop, uvi 기준으로 정렬)
-candidates = df[df["walkable"] == 1]
-candidates = candidates.sort_values(by=["pop", "uvi", "temp"]).head(3)
-
-# 🔹 결과 구성
-best_times = []
-for _, row in candidates.iterrows():
-    summary = "맑음" if row["main_Clear"] else "흐림" if row["main_Clouds"] else "비/눈"
-    best_times.append({
-        "time": row["dt"],
-        "temp": round(row["temp"], 1),
-        "uvi": round(row["uvi"], 1),
-        "pop": round(row["pop"] * 100),  # %
-        "summary": summary
-    })
-
-print(json.dumps({ "best_times": best_times }, ensure_ascii=False))
+        return {
+            "statusCode": 200,
+            "body": json.dumps({ "best_times": best_times }, ensure_ascii=False)
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({ "error": str(e) }, ensure_ascii=False)
+        }

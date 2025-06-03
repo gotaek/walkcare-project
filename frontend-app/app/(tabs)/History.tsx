@@ -82,7 +82,7 @@ export default function HistoryScreen() {
     console.log(walk_id);
     try {
       await axios.delete(
-        `https://m106osgu62.execute-api.ap-northeast-2.amazonaws.com/dev/deleteHistory/${walk_id}`
+        `https://neu4a1hchb.execute-api.ap-northeast-2.amazonaws.com/dev/${walk_id}`
       );
       setData((prev) => prev.filter((item) => item.walk_id !== walk_id));
     } catch (err) {
