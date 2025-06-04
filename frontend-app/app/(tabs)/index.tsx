@@ -58,9 +58,9 @@ export default function HomeScreen() {
       console.log("🔐 access_token:", token);
 
       const profileUrl =
-        "https://ite64nurad.execute-api.ap-northeast-2.amazonaws.com/fitbitProfile";
+        "https://cg5kxlgo7k.execute-api.ap-northeast-2.amazonaws.com/fitbit/profile";
       const activityUrl =
-        "https://6st6a9j910.execute-api.ap-northeast-2.amazonaws.com/fitbitActivity";
+        "https://cg5kxlgo7k.execute-api.ap-northeast-2.amazonaws.com/fitbit/activity";
 
       console.log("📤 profile 요청:", profileUrl);
       console.log("📤 activity 요청:", activityUrl);

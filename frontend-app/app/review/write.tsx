@@ -41,7 +41,7 @@ export default function ReviewWrite() {
         }
 
         const res = await axios.get(
-          `https://iec05jbxy3.execute-api.ap-northeast-2.amazonaws.com/fitbitSummary`,
+          `https://cg5kxlgo7k.execute-api.ap-northeast-2.amazonaws.com/fitbit/summary`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
