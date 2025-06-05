@@ -1,3 +1,6 @@
+//경로: backend/aws/lambda/fitbit/fitbitSummary.js
+// Fitbit 활동 요약(걸음수, 칼로리 소모량, 안정 심박수)를 가져오는 Lambda 함수
+
 const axios = require("axios");
 
 exports.handler = async (event) => {
@@ -13,9 +16,6 @@ exports.handler = async (event) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-
-    // ✅ 임시 user_id 직접 지정 (개발 중)
-    const userId = "CLYLD9"; // 나중에는 token에서 추출 필요
 
     const access_token = token;
     const today = new Date().toISOString().slice(0, 10);

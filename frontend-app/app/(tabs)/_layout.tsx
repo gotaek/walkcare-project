@@ -1,5 +1,5 @@
-// 📁 app/(tabs)/_layout.tsx
-// 하단 탭(Tab Navigator) + 공통 상단 헤더 구성
+// 경로: frontend-app/app/(tabs)/_layout.tsx
+// 설명: Expo Router를 사용하여 하단 탭 네비게이션과 공통 상단 헤더를 구성하는 레이아웃 파일
 
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";

@@ -1,4 +1,5 @@
-// context/AuthContext.tsx
+// 경로: frontend-app/context/AuthContext.tsx
+// 설명: 사용자 인증 상태를 관리하는 컨텍스트
 import React, { createContext, useState, useEffect } from "react";
 import { getAccessToken } from "@/utils/TokenStorage";
 

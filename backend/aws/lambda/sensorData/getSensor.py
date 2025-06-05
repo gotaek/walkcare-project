@@ -1,3 +1,6 @@
+# 경로: /backend/aws/lambda/sensorData/getSensor.py
+# 설명: AWS Lambda 함수로, 센서 데이터를 DynamoDB에서 조회하여 JSON 형식으로 반환
+
 import boto3
 import json
 import decimal

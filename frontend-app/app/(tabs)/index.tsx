@@ -1,3 +1,6 @@
+// 경로: frontend-app/app/(tabs)/index.tsx
+// 설명: 홈 화면을 구성하는 컴포넌트로, 미세먼지와 건강 데이터를 표시하고 새로고침 기능을 제공
+
 import React, { useEffect, useState, useCallback, useContext } from "react";
 import {
   View,
@@ -6,7 +9,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
 import { PRIMARY_COLOR } from "@/constants/Colors";
 import { getAccessToken } from "@/utils/TokenStorage";
 import { AuthContext } from "@/context/AuthContext";
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const { isLoggedIn } = useContext(AuthContext);
 
+  // 미세먼지 카드의 테두리 색상을 PM10 농도에 따라 설정하는 함수
   const getPMCardBorderColor = (pm10: number | null) => {
     if (pm10 === null) return "#d0e7ff";
     if (pm10 <= 30) return "#5cb85c";
@@ -34,6 +37,7 @@ export default function HomeScreen() {
     return "#d9534f";
   };
 
+  // PM 데이터를 가져오는 함수
   const fetchPM = useCallback(async () => {
     setLoadingPM(true);
     try {
@@ -52,18 +56,14 @@ export default function HomeScreen() {
     }
   }, []);
 
+  // Fitbit 데이터 가져오기 함수
   const fetchFitbitData = useCallback(async (token: string) => {
     try {
-      console.log("🟢 fetchFitbitData 진입");
-      console.log("🔐 access_token:", token);
-
+      console.log("🔄 Fitbit 데이터 요청 중...");
       const profileUrl =
         "https://cg5kxlgo7k.execute-api.ap-northeast-2.amazonaws.com/fitbit/profile";
       const activityUrl =
         "https://cg5kxlgo7k.execute-api.ap-northeast-2.amazonaws.com/fitbit/activity";
-
-      console.log("📤 profile 요청:", profileUrl);
-      console.log("📤 activity 요청:", activityUrl);
 
       const [profileRes, activityRes] = await Promise.all([
         fetch(profileUrl, {
@@ -83,7 +83,6 @@ export default function HomeScreen() {
       }
 
       const profileData = await profileRes.json();
-      console.log("📥 프로필 데이터:", profileData);
 
       if (!activityRes.ok) {
         const errorText = await activityRes.text();
@@ -94,7 +93,6 @@ export default function HomeScreen() {
       }
 
       const activityData = await activityRes.json();
-      console.log("📥 활동 데이터:", activityData);
 
       setProfile(profileData);
       setActivity(activityData);

@@ -1,4 +1,4 @@
--- WalkCare 프로젝트 DB 초기 설정을 위한 스크립트 (자신의 mySql 로컬 환경에서 copy&paste 가능)
+-- WalkCare 프로젝트 DB 초기 설정을 위한 스크립트
 CREATE DATABASE IF NOT EXISTS walkcare;
 USE walkcare;
 
@@ -43,18 +43,4 @@ CREATE TABLE steps_logs (
   time_stamp TIMESTAMP,
   steps INT,
   FOREIGN KEY (walk_id) REFERENCES walk_log(walk_id)
-);
-
--- 5. fitbit_tokens 테이블 생성 (OAuth2 토큰 저장용)
-CREATE TABLE fitbit_tokens (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id VARCHAR(50),
-  access_token TEXT NOT NULL,
-  refresh_token TEXT NOT NULL,
-  expired_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  fitbit_user_id VARCHAR(100),
-  scope TEXT,
-  token_type VARCHAR(50),
-  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );

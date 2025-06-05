@@ -3,6 +3,8 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
+//경로: frontend-app/constants/Colors.ts
+//설명: 앱에서 사용하는 색상 상수 정의
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 export const PRIMARY_COLOR = '#2C6B9C';

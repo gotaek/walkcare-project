@@ -1,3 +1,6 @@
+// 경로: frontend-app/app/(tabs)/History.tsx
+// 설명: 산책 기록을 조회하고 삭제할 수 있는 화면
+
 import { useEffect, useState, useContext, useCallback } from "react";
 import {
   View,
@@ -10,23 +13,23 @@ import {
   Dimensions,
 } from "react-native";
 import axios from "axios";
-import Constants from "expo-constants";
-import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
+
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc"; // UTC 플러그인 임포트
 import timezone from "dayjs/plugin/timezone"; // Timezone 플러그인 임포트
+
 import { getAccessToken } from "@/utils/TokenStorage";
 import { AuthContext } from "@/context/AuthContext";
+import { PRIMARY_COLOR, SECONDARY_COLOR } from "@/constants/Colors";
+
 import { LineChart } from "react-native-chart-kit";
 
 // dayjs 플러그인 활성화
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// 기본 타임존을 'Asia/Seoul'로 설정 (애플리케이션 전반에 영향을 줌)
+// 기본 타임존을 'Asia/Seoul'로 설정
 dayjs.tz.setDefault("Asia/Seoul");
-
-const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 
 interface HistoryItem {
   walk_id: string;
@@ -64,10 +67,10 @@ export default function HistoryScreen() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
         if (Array.isArray(res.data.history)) {
           setData(res.data.history);
         }
+        console.log("히스토리 불러오기 성공:", res.data.history);
       } catch (err) {
         console.error("히스토리 불러오기 실패:", err);
       } finally {
@@ -78,6 +81,7 @@ export default function HistoryScreen() {
     loadHistory();
   }, [isLoggedIn]);
 
+  // 기록 삭제 함수
   const handleDelete = useCallback(async (walk_id: string) => {
     console.log(walk_id);
     try {
@@ -91,11 +95,12 @@ export default function HistoryScreen() {
     }
   }, []);
 
+  // 오늘의 칼로리 소모량 차트 렌더링
   const renderCaloriesChart = useCallback(() => {
-    // 오늘 날짜로 필터링 (2025-05-16)
-    const today = dayjs().format("YYYY-MM-DD");
-    const todayData = data.filter((item) =>
-      dayjs(item.end_time).isSame(today, "day")
+    const today = dayjs().tz().format("YYYY-MM-DD");
+
+    const todayData = data.filter(
+      (item) => dayjs.utc(item.end_time).tz().format("YYYY-MM-DD") === today
     );
 
     if (todayData.length === 0) {
@@ -121,16 +126,14 @@ export default function HistoryScreen() {
     const labels = sortedTimes.length > 0 ? sortedTimes : ["00:00"];
     const caloriesData =
       sortedTimes.length > 0 ? sortedTimes.map((time) => timeSlots[time]) : [0];
-
-    // Y축 최댓값 설정
-    const yAxisMax = Math.max(...caloriesData, 1);
+    console.log(caloriesData);
 
     return (
       <View style={styles.chartBox}>
         <Text style={styles.chartTitle}>📊 오늘의 칼로리 소모량</Text>
         <LineChart
           data={{
-            labels, // 예: ["월", "화", "수", "목", "금"]
+            labels,
             datasets: [{ data: caloriesData }],
           }}
           width={Dimensions.get("window").width - 40}
@@ -145,13 +148,13 @@ export default function HistoryScreen() {
             backgroundGradientFrom: "#fff",
             backgroundGradientTo: "#fff",
             decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // 선 색상
-            labelColor: () => "#333", // Y축 라벨 컬러 명시
+            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+            labelColor: () => "#333",
             propsForDots: {
               r: "4",
               strokeWidth: "2",
               stroke: "#007AFF",
-              fill: "#ffffff", // 흰색 점
+              fill: "#ffffff",
             },
             propsForBackgroundLines: {
               stroke: "#e0e0e0",
@@ -166,6 +169,7 @@ export default function HistoryScreen() {
     );
   }, [data]);
 
+  // 헤더 렌더링
   const renderHeader = useCallback(
     () => (
       <View>
@@ -180,7 +184,7 @@ export default function HistoryScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }) => (
+    ({ item }: { item: HistoryItem }) => (
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <Text style={styles.name}>
@@ -278,10 +282,10 @@ const styles = StyleSheet.create({
   chartBox: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: "#fff", // 배경을 흰색으로 변경
+    backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
-    alignItems: "center", // 그래프를 가운데 정렬하기 위해 추가
+    alignItems: "center",
   },
   chartTitle: {
     fontSize: 16,

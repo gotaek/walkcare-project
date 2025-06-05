@@ -1,10 +1,13 @@
+//경로: backend/aws/lambda/exchange/exchange.js
+// kakao Map API와 OpenWeatherMap API를 사용하여 산책 추천 장소와 날씨 정보를 제공하는 Lambda 함수
+
 const axios = require("axios");
 
 const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
 const OPEN_WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY;
 
 const PREDICT_API_URL =
-  "https://s4c5i6tmcc.execute-api.ap-northeast-2.amazonaws.com/predict";
+  "https://s4c5i6tmcc.execute-api.ap-northeast-2.amazonaws.com/predict"; // 산책 시간대 추천 Python Lambda 예측 API URL
 
 const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -64,16 +67,26 @@ exports.handler = async (event) => {
 
     const hourly = weatherRes.data.hourly || [];
 
-    const hourlyWeather = hourly.slice(0, 48).map((h) => ({
-      dt: h.dt,
-      temp: h.temp,
-      humidity: h.humidity,
-      uvi: h.uvi ?? 0,
-      pop: h.pop ?? 0,
-      main: h.weather?.[0]?.main || "Clear",
-    }));
-
+    // 현재 시각 기준 (UTC 초 단위)
     const now = new Date();
+    const nowTimestamp = Math.floor(now.getTime() / 1000); // 초 단위
+
+    console.log(hourly.slice(0, 48));
+
+    // 현재 시간 이후만 포함하는 hourlyWeather 생성
+    const hourlyWeather = hourly
+      .slice(0, 48)
+      .filter((h) => h.dt >= nowTimestamp) //현재 이후만 필터링
+      .map((h) => ({
+        dt: h.dt,
+        temp: h.temp,
+        humidity: h.humidity,
+        uvi: h.uvi ?? 0,
+        pop: h.pop ?? 0,
+        main: h.weather?.[0]?.main || "Clear",
+      }));
+
+    // 현재 날씨 정보
     const today = {
       date: now.toISOString().split("T")[0],
       day: daysKor[now.getDay()],

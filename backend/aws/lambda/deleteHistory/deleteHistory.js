@@ -1,3 +1,6 @@
+// 경로:  backend/aws/lambda/deleteHistory/deleteHistory.js
+// 특정 walk_id에 해당하는 산책 기록을 삭제하는 Lambda 함수
+
 const mysql = require("mysql2/promise");
 
 exports.handler = async (event) => {

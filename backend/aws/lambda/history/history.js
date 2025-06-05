@@ -1,10 +1,11 @@
+//경로: backend/aws/lambda/history/history.js
+// 사용자의 산책 기록을 가져오는 Lambda 함수
+
 const mysql = require("mysql2/promise");
 
 exports.handler = async (event) => {
   try {
-    // 헤더에서 user_id 또는 token 대신 임시 user_id 추출
-    const user_id = event.queryStringParameters?.user_id || "CLYLD9"; // 실제 서비스에서는 token 기반으로
-
+    const user_id = event.queryStringParameters?.user_id || "CLYLD9";
     if (!user_id) {
       return {
         statusCode: 401,

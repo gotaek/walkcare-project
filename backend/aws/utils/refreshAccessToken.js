@@ -1,3 +1,6 @@
+//경로: backend/aws/lambda/utiils/refreshAccessToken.js
+//Fitbit OAuth 토큰을 갱신하는 유틸리티 함수
+
 const axios = require("axios");
 const { getToken, setToken } = require("./dynamoToken");
 

@@ -3,6 +3,8 @@ node_modules/
 *.pem
 *.crt
 *.key
+*.pkl
+*.csv
 __pycache__/
 /backend/tokens/fitbit_tokens.json
 /backend/data/active_users.txt

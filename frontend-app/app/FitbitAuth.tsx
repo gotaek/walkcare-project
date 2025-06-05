@@ -1,4 +1,6 @@
-// 📁 app/screens/FitbitAuth.tsx
+// 경로: frontend-app/app/FitbitAuth.tsx
+// 설명: Fitbit OAuth 인증을 위한 WebView 컴포넌트
+
 import { WebView } from "react-native-webview";
 import { useContext } from "react";
 import { View, ActivityIndicator } from "react-native";
@@ -6,11 +8,19 @@ import { storeAccessToken } from "@/utils/TokenStorage";
 import { AuthContext } from "@/context/AuthContext";
 import { useNavigation } from "expo-router";
 
-const CLIENT_ID = "23QB55";
-const FITBIT_AUTH_URL = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23QB55&redirect_uri=${encodeURIComponent(
-  "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback"
+const FITBIT_CLIENT_ID = process.env.EXPO_PUBLIC_FITBIT_CLIENT_ID;
+const FITBIT_REDIRECT_URI = process.env.EXPO_PUBLIC_FITBIT_REDIRECT_URI;
+
+if (!FITBIT_CLIENT_ID || !FITBIT_REDIRECT_URI) {
+  console.error("Fitbit OAuth 환경 변수가 설정되지 않았습니다.");
+}
+
+// Fitbit OAuth 인증 URL 생성
+const FITBIT_AUTH_URL = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${FITBIT_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+  FITBIT_REDIRECT_URI
 )}&scope=activity+heartrate+sleep+profile`;
 
+// FitbitAuth 컴포넌트
 export default function FitbitAuth() {
   const navigation = useNavigation();
   const { setIsLoggedIn } = useContext(AuthContext);

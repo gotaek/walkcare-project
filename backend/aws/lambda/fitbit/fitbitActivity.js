@@ -1,3 +1,6 @@
+// 경로: backend/aws/lambda/fitbit/fitbitActivity.js
+// Fitbit 활동 데이터(걸음수, 칼로리 소모량)를 가져오는 Lambda 함수
+
 const axios = require("axios");
 
 exports.handler = async (event) => {

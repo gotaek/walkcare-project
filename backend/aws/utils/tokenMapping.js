@@ -1,8 +1,10 @@
+//경로: backend/aws/lambda/utils/tokenMapping.js
+//access_token으로 user_id 찾는 유틸리티 함수수
+
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = "FitbitTokens";
 
-// 🔍 access_token으로 user_id 찾기 (전체 스캔 방식)
 exports.getUserIdByToken = async (access_token) => {
   const result = await dynamo
     .scan({
@@ -21,5 +23,5 @@ exports.getUserIdByToken = async (access_token) => {
     return result.Items[0].user_id;
   }
 
-  return null; // 못 찾은 경우
+  return null;
 };

@@ -1,4 +1,6 @@
-# lambda_predict.py
+# 경로: /backend/aws/lambda/predictWalkTime/predictWalkTime.py
+# 설명: AWS Lambda 함수로, 주어진 시간대의 날씨 데이터를 기반으로 걷기에 적합한 시간을 예측
+
 import json
 import joblib
 import pandas as pd

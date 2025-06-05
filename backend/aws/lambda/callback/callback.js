@@ -1,3 +1,6 @@
+//경로: backend/aws/lambda/exchange/exchange.js
+// Fitbit OAuth 인증 코드 교환을 처리하는 Lambda 함수
+
 exports.handler = async (event) => {
   const code = event.queryStringParameters?.code || "";
 

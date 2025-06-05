@@ -1,3 +1,5 @@
+# 경로: /backend/aws/lambda/sensorData/storeSensor.py
+# 설명: AWS Lambda 함수로, 센서 데이터를 DynamoDB에 저장하는 기능을 구현
 import json
 import boto3
 from decimal import Decimal

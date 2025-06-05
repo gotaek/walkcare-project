@@ -1,4 +1,5 @@
-// 📁 components/Header.tsx
+// 경로: frontend-app/components/Header.tsx
+// 설명: WalkCare 앱의 상단 헤더 컴포넌트로, 로고와 로그인/로그아웃 버튼을 포함
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "expo-router";
 import { PRIMARY_COLOR } from "@/constants/Colors";
@@ -6,6 +7,7 @@ import { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { removeAccessToken } from "@/utils/TokenStorage";
 
+// WalkCare 앱의 상단 헤더 컴포넌트
 export default function Header() {
   const navigation = useNavigation();
   const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);

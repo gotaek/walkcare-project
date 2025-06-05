@@ -1,5 +1,5 @@
-//경로: backend/aws/lambda/review/review.js
-// 사용자가 산책 후 리뷰를 작성하는 Lambda 함수
+// 경로: backend/routes/reviews.js
+// 사용자 리뷰를 저장하는 라우트 설정
 
 const mysql = require("mysql2/promise");
 const { v4: uuidv4 } = require("uuid");
@@ -29,15 +29,15 @@ exports.handler = async (event) => {
     }
 
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: "walkcare-db.abcxyz.ap-northeast-2.rds.amazonaws.com",
+      user: "admin",
+      password: "deriko3255",
+      database: "walkcare",
     });
 
     const walk_id = uuidv4();
     const end_time = new Date(ended_at);
-    const start_time = new Date(end_time.getTime() - 30 * 60000);
+    const start_time = new Date(end_time.getTime() - 30 * 60000); // 30분 전
     const created_at = new Date();
 
     await connection.execute(

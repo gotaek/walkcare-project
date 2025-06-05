@@ -1,12 +1,17 @@
-//경로: backend/aws/lambda/exchange/exchange.js
-// Fitbit OAuth 인증 코드 교환을 처리하는 Lambda 함수
+// 경로: backend/routes/exchange.js
+// Fitbit OAuth 인증 코드를 액세스 토큰으로 교환하는 라우트 설정
 
 const axios = require("axios");
 const qs = require("qs");
 
 exports.handler = async (event) => {
   const code = event.queryStringParameters?.code;
-  if (!code) return { statusCode: 400, body: "Missing code" };
+  const redirect_uri =
+    "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback";
+
+  if (!code) {
+    return { statusCode: 400, body: "Missing code" };
+  }
 
   const authHeader = Buffer.from(
     `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`
@@ -18,8 +23,7 @@ exports.handler = async (event) => {
       qs.stringify({
         code,
         grant_type: "authorization_code",
-        redirect_uri:
-          "https://d8qdx561m5.execute-api.ap-northeast-2.amazonaws.com/callback",
+        redirect_uri,
       }),
       {
         headers: {
@@ -29,18 +33,18 @@ exports.handler = async (event) => {
       }
     );
 
-    const { access_token, refresh_token, user_id, expires_in } = res.data;
-
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ access_token, user_id }),
+      body: JSON.stringify(res.data),
     };
   } catch (err) {
-    console.error(
-      "❌ Token exchange error:",
-      err.response?.data || err.message
-    );
-    return { statusCode: 500, body: "OAuth Token Exchange Failed" };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: "OAuth exchange failed",
+        detail: err.message,
+      }),
+    };
   }
 };

@@ -1,6 +1,5 @@
-// 파일: app/(tabs)/Recommendation.tsx
-// 사용자가 산책 시간을 선택하면 위치 기반으로 산책 코스를 추천해주고,
-// 산책 타이머까지 제공하는 주요 기능 화면입니다.
+// 경로: frontend-app/app/(tabs)/Recommendation.tsx
+// 설명: 산책 코스를 추천받고 시작할 수 있는 화면
 
 import {
   View,
@@ -44,6 +43,7 @@ export default function RecommendationScreen() {
 
   const router = useRouter();
 
+  // 시간 선택 핸들러
   const handleRecommend = async () => {
     if (!time) {
       Alert.alert("시간 선택", "산책 시간을 먼저 선택하세요!");
@@ -77,7 +77,7 @@ export default function RecommendationScreen() {
 
       setResult(`${data.recommendation} (${data.estimated_time})`);
       setCourses(data.courses || []);
-      setBestTimes(data.best_times.reverse() || []);
+      setBestTimes(data.best_times.slice(1) || []);
       setTodayWeather(data.weather_today || null);
     } catch (err) {
       console.error("추천 요청 실패:", err);
@@ -87,6 +87,7 @@ export default function RecommendationScreen() {
     }
   };
 
+  // 산책 시작 핸들러
   const handleStartWalk = (course: Course) => {
     if (!time) return;
     setSelectedCourse(course);
@@ -94,6 +95,7 @@ export default function RecommendationScreen() {
     setIsWalking(true);
   };
 
+  // 산책 종료 핸들러
   const handleStopWalk = () => {
     if (!selectedCourse) return;
     const endedAt = dayjs().format("YYYY-MM-DD HH:mm");
@@ -111,6 +113,7 @@ export default function RecommendationScreen() {
     setTimeLeft(0);
   };
 
+  // 타이머 업데이트
   useEffect(() => {
     if (!isWalking || timeLeft <= 0) return;
 

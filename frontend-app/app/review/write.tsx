@@ -1,6 +1,5 @@
-// 📁 app/(tabs)/review/Write.tsx
-// 사용자가 산책 후 리뷰를 작성할 수 있는 화면
-// 작성 내용: 코스명, 종료 시각, 별점, 코멘트
+// 경로: frontend-app/app/review/write.tsx
+// 설명:리뷰 작성 화면을 구성하는 컴포넌트로, 사용자가 산책 후 리뷰를 작성할 수 있는 기능을 제공
 // 추가: Fitbit 활동 요약 (걸음수, 칼로리, 평균 심박수)도 함께 서버로 전송
 
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,16 +12,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import axios from "axios";
-import Constants from "expo-constants";
 import { PRIMARY_COLOR } from "@/constants/Colors";
 import { getAccessToken } from "@/utils/TokenStorage";
 
 export default function ReviewWrite() {
   const { courseName, endedAt } = useLocalSearchParams(); // URL 쿼리 파라미터 추출
-  const router = useRouter(); // 페이지 이동 처리
+  const router = useRouter();
 
-  const [rating, setRating] = useState(0); // 별점 (1~5)
-  const [comment, setComment] = useState(""); // 텍스트 코멘트
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
   const [activity, setActivity] = useState({
     // Fitbit 활동 데이터
     steps: 0,
@@ -30,7 +28,7 @@ export default function ReviewWrite() {
     heartRate: 0,
   });
 
-  // 📥 리뷰 화면 진입 시 Fitbit 활동 요약 요청
+  // Fitbit 활동 요약 데이터 가져오기
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -60,7 +58,7 @@ export default function ReviewWrite() {
     fetchSummary();
   }, []);
 
-  // 📤 서버로 리뷰 제출 처리
+  // 리뷰 제출 핸들러
   const handleSubmit = async () => {
     if (!courseName || !endedAt || !rating) {
       alert("모든 항목을 입력해 주세요.");
@@ -99,7 +97,6 @@ export default function ReviewWrite() {
     }
   };
 
-  // 💡 UI 렌더링
   return (
     <View style={styles.container}>
       <Text style={styles.title}>📝 리뷰 작성</Text>
@@ -132,7 +129,6 @@ export default function ReviewWrite() {
   );
 }
 
-// 🎨 스타일 정의
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: "#ffffff" },
   title: { fontSize: 24, fontWeight: "bold", color: PRIMARY_COLOR },

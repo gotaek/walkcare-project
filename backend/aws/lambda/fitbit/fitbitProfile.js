@@ -1,3 +1,6 @@
+// 경로: backend/aws/lambda/fitbit/fitbitActivity.js
+// Fitbit 프로필필 데이터를 가져오는 Lambda 함수
+
 const axios = require("axios");
 
 exports.handler = async (event) => {
